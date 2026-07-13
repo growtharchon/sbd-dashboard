@@ -103,10 +103,10 @@
 <header class="page"><div class="wrap">
   <div class="brandrow">
     <h1>SB Mobile Detailing — Marketing Dashboard</h1>
-    <span class="badge" id="mode-badge">Sample data</span>
+    <span class="badge" id="mode-badge" style="display:none"></span>
   </div>
-  <div class="sub" id="range">Last 90 days</div>
-  <div class="source">Sources: Google Ads · Google Analytics (GA4) · Search Console — auto-synced to Google Sheet, updates on load</div>
+  <div class="sub" id="range">&nbsp;</div>
+  <div class="source">Google Ads · Google Analytics · Search Console — updated daily</div>
 </div></header>
 
 <div class="toolbar"><div class="inner">
@@ -252,6 +252,12 @@ function buildSection(cfg,full,window){
   h.appendChild(el("span","note",`Last ${window} days${prev.length?` vs previous ${window}`:""}`));
   root.appendChild(h);
 
+  if(!full || full.length===0){
+    const box=el("div","analysis"); box.style.borderLeftColor=`var(${cfg.color})`;
+    box.innerHTML=`<div class="h">Temporarily unavailable</div><p>This section couldn't load right now — please refresh in a moment.</p>`;
+    root.appendChild(box); return;
+  }
+
   const kp=el("div","kpis");
   cfg.tiles.forEach(t=>{
     const cv=t.val(cur), pv=prev.length?t.val(prev):null, d=chg(cv,pv);
@@ -377,8 +383,8 @@ async function loadAll(){
     const url=SOURCES[cfg.key];
     if(url){ try{ const res=await fetch(url); if(!res.ok) throw new Error("HTTP "+res.status);
       DATA[cfg.key]=shape(await res.text(),cfg.colmap); anyLive=true; continue; }
-      catch(e){ anyErr=e.message; } }
-    DATA[cfg.key]=genSample(cfg.key);
+      catch(e){ anyErr=e.message; DATA[cfg.key]=[]; continue; } }   // live source failed → empty, never fake data
+    DATA[cfg.key]=genSample(cfg.key);                               // sample only when no URL is configured (dev preview)
   }
 }
 
@@ -392,17 +398,19 @@ function rebuild(window){
   });
   document.querySelectorAll("#seg button").forEach(b=>b.classList.toggle("active",+b.dataset.w===window));
   if(maxD!=="0") document.getElementById("range").textContent=`${dayLabel(minD)} – ${dayLabel(maxD)} · last ${window} days`;
+  const badge=document.getElementById("mode-badge");
+  if(anyLive && maxD!=="0"){ badge.textContent="Updated "+dayLabel(maxD); badge.style.display=""; }
+  else badge.style.display="none";
 }
 
 async function boot(){
   await loadAll();
-  document.getElementById("mode-badge").textContent = anyLive?"Live · Google Sheet":"Sample data";
   document.querySelectorAll("#seg button").forEach(b=>b.addEventListener("click",()=>rebuild(+b.dataset.w)));
   rebuild(DEFAULT_WINDOW);
+  // status line is internal-only; keep it silent for the client unless a real error occurs
   const st=document.getElementById("status");
-  if(!ADS_CSV&&!ANALYTICS_CSV&&!SEARCH_CSV) st.textContent="Previewing sample data — paste your 3 published-CSV links into the CONFIG block to go live.";
-  else if(anyErr) st.textContent="Some sources could not load ("+anyErr+") — showing sample where needed.";
-  else st.textContent="Loaded live from Google Sheet.";
+  if(anyErr && !anyLive) st.textContent="Data is temporarily unavailable — please refresh in a moment.";
+  else st.textContent="";
 }
 boot();
 </script>
