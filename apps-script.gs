@@ -1,0 +1,105 @@
+/**
+ * SBD dashboard — Google Analytics (GA4) + Search Console → Google Sheet
+ * ============================================================================
+ * This script lives INSIDE your Google Sheet (Extensions → Apps Script).
+ * It pulls GA4 and Search Console data and writes them to the `analytics`
+ * and `search` tabs. Put both functions on a DAILY trigger and the Sheet
+ * (and the dashboard) stay current with zero downloads.
+ *
+ * ── ONE-TIME SETUP (details in SETUP-GUIDE.md) ──────────────────────────────
+ * 1. Open your Sheet → Extensions → Apps Script. Delete the sample code,
+ *    paste this whole file.
+ * 2. Fill in GA4_PROPERTY_ID and GSC_SITE_URL below.
+ * 3. Left sidebar → "Services" (the + icon) → add "Google Analytics Data API".
+ * 4. Left sidebar → Project Settings (gear) → tick "Show appsscript.json".
+ *    Open appsscript.json and make its "oauthScopes" match the block in
+ *    SETUP-GUIDE.md (adds Search Console + external-request permissions).
+ * 5. Select pullGA4 in the toolbar → Run → authorize when prompted.
+ *    Then select pullSearchConsole → Run → authorize.
+ * 6. Left sidebar → Triggers (clock icon) → add a daily trigger for each
+ *    function. Done — it now updates itself.
+ * ============================================================================
+ */
+
+// ── FILL THESE IN ───────────────────────────────────────────────────────────
+var GA4_PROPERTY_ID = "311415479";                   // SB Mobile Detailing GA4 property
+var GSC_SITE_URL    = "sc-domain:sbmobiledetailing.com";  // Search Console domain property
+var DAYS_BACK       = 90;                            // rolling window of history to pull
+var GA4_TAB         = "analytics";
+var GSC_TAB         = "search";
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function tz_()    { return Session.getScriptTimeZone(); }
+function today_() { return Utilities.formatDate(new Date(), tz_(), "yyyy-MM-dd"); }
+function startDate_() {
+  var d = new Date();
+  d.setDate(d.getDate() - DAYS_BACK);
+  return Utilities.formatDate(d, tz_(), "yyyy-MM-dd");
+}
+function num_(v) { var n = Number(v); return isNaN(n) ? 0 : n; }
+function writeTab_(name, values) {
+  var ss = SpreadsheetApp.getActive();
+  var sh = ss.getSheetByName(name) || ss.insertSheet(name);
+  sh.clearContents();
+  sh.getRange(1, 1, values.length, values[0].length).setValues(values);
+}
+
+// ── GA4 → `analytics` tab ────────────────────────────────────────────────────
+function pullGA4() {
+  var report = AnalyticsData.Properties.runReport({
+    dateRanges: [{ startDate: DAYS_BACK + "daysAgo", endDate: "today" }],
+    dimensions: [{ name: "date" }],
+    metrics: [
+      { name: "sessions" },
+      { name: "totalUsers" },
+      { name: "engagedSessions" },
+      { name: "screenPageViews" },
+      { name: "keyEvents" }          // if this errors on your property, change to "conversions"
+    ],
+    orderBys: [{ dimension: { dimensionName: "date" } }],
+    limit: 100000
+  }, "properties/" + GA4_PROPERTY_ID);
+
+  var out = [["Date", "Sessions", "Users", "Engaged sessions", "Page views", "Key events"]];
+  (report.rows || []).forEach(function (r) {
+    var d = r.dimensionValues[0].value;                  // "YYYYMMDD"
+    var date = d.substring(0, 4) + "-" + d.substring(4, 6) + "-" + d.substring(6, 8);
+    var m = r.metricValues;
+    out.push([date, num_(m[0].value), num_(m[1].value), num_(m[2].value), num_(m[3].value), num_(m[4].value)]);
+  });
+  writeTab_(GA4_TAB, out);
+  Logger.log("GA4: wrote " + (out.length - 1) + " days.");
+}
+
+// ── Search Console → `search` tab ────────────────────────────────────────────
+function pullSearchConsole() {
+  var url = "https://searchconsole.googleapis.com/webmasters/v3/sites/"
+          + encodeURIComponent(GSC_SITE_URL) + "/searchAnalytics/query";
+  var res = UrlFetchApp.fetch(url, {
+    method: "post",
+    contentType: "application/json",
+    headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() },
+    payload: JSON.stringify({
+      startDate: startDate_(),
+      endDate: today_(),
+      dimensions: ["date"],
+      rowLimit: 25000
+    }),
+    muteHttpExceptions: true
+  });
+  if (res.getResponseCode() !== 200) {
+    throw new Error("Search Console error " + res.getResponseCode() + ": " + res.getContentText());
+  }
+  var rows = (JSON.parse(res.getContentText()).rows) || [];
+  rows.sort(function (a, b) { return a.keys[0] < b.keys[0] ? -1 : 1; });
+
+  var out = [["Date", "Clicks", "Impressions", "CTR", "Position"]];
+  rows.forEach(function (row) {
+    var date = row.keys[0];                              // "YYYY-MM-DD"
+    var ctr  = row.impressions ? (row.clicks / row.impressions) * 100 : 0;
+    out.push([date, Math.round(row.clicks), Math.round(row.impressions),
+              Math.round(ctr * 100) / 100, Math.round(row.position * 10) / 10]);
+  });
+  writeTab_(GSC_TAB, out);
+  Logger.log("Search Console: wrote " + (out.length - 1) + " days.");
+}
