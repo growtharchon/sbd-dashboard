@@ -9,7 +9,7 @@
     --plane:#f9f9f7; --surface:#ffffff; --text-primary:#0b0b0b; --text-secondary:#52514e;
     --muted:#898781; --grid:#e1e0d9; --baseline:#c3c2b7; --border:rgba(11,11,11,0.10);
     --series-1:#2a78d6; --series-2:#1baf7a; --series-3:#eda100; --series-4:#4a3aa7;
-    --good:#006300; --bad:#c23b3b;
+    --good:#006300; --bad:#c23b3b; --accent-wash:rgba(42,120,214,0.06);
     --shadow:0 1px 2px rgba(11,11,11,0.04), 0 4px 16px rgba(11,11,11,0.04);
   }
   @media (prefers-color-scheme: dark) {
@@ -17,17 +17,17 @@
       --plane:#0d0d0d; --surface:#1a1a19; --text-primary:#ffffff; --text-secondary:#c3c2b7;
       --muted:#898781; --grid:#2c2c2a; --baseline:#383835; --border:rgba(255,255,255,0.10);
       --series-1:#3987e5; --series-2:#199e70; --series-3:#c98500; --series-4:#9085e9;
-      --good:#0ca30c; --bad:#e66767;
+      --good:#0ca30c; --bad:#e66767; --accent-wash:rgba(57,135,229,0.10);
       --shadow:0 1px 2px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.3);
     }
   }
   * { box-sizing:border-box; }
-  html,body { margin:0; padding:0; }
+  html,body { margin:0; padding:0; scroll-behavior:smooth; }
   body { background:var(--plane); color:var(--text-primary);
     font-family:system-ui,-apple-system,"Segoe UI",sans-serif; line-height:1.45; -webkit-font-smoothing:antialiased; }
-  .wrap { max-width:1120px; margin:0 auto; padding:32px 20px 72px; }
+  .wrap { max-width:1120px; margin:0 auto; padding:0 20px; }
 
-  header.page { margin-bottom:8px; }
+  header.page { padding-top:30px; }
   .brandrow { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
   h1 { font-size:26px; margin:0; letter-spacing:-0.01em; }
   .badge { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;
@@ -35,12 +35,29 @@
   .sub { color:var(--text-secondary); font-size:14px; margin-top:6px; }
   .source { color:var(--muted); font-size:12px; margin-top:2px; }
 
-  .section-h { display:flex; align-items:center; gap:10px; margin:38px 0 4px; }
+  /* sticky nav + filter bar */
+  .toolbar { position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--plane) 88%, transparent);
+    backdrop-filter:blur(8px); border-bottom:1px solid var(--border); margin-top:18px; }
+  .toolbar .inner { max-width:1120px; margin:0 auto; padding:10px 20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  .nav { display:flex; gap:6px; flex-wrap:wrap; }
+  .nav a { font-size:13px; font-weight:600; color:var(--text-secondary); text-decoration:none;
+    padding:6px 12px; border-radius:8px; border:1px solid transparent; }
+  .nav a:hover { background:var(--accent-wash); color:var(--text-primary); }
+  .nav a .d { display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:6px; vertical-align:middle; }
+  .filter { margin-left:auto; display:flex; align-items:center; gap:8px; }
+  .filter .lbl { font-size:12px; color:var(--muted); }
+  .filter .seg { display:inline-flex; border:1px solid var(--border); border-radius:9px; overflow:hidden; }
+  .filter button { font-size:13px; font-weight:600; color:var(--text-secondary); background:transparent;
+    border:none; padding:6px 13px; cursor:pointer; }
+  .filter button+button { border-left:1px solid var(--border); }
+  .filter button.active { background:var(--series-1); color:#fff; }
+
+  .section-h { display:flex; align-items:center; gap:10px; margin:36px 0 4px; scroll-margin-top:64px; }
   .section-h .dot { width:10px; height:10px; border-radius:3px; }
   .section-h h2 { font-size:19px; margin:0; letter-spacing:-0.01em; }
   .section-h .note { font-size:12.5px; color:var(--muted); margin-left:auto; }
 
-  .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:16px 0 20px; }
+  .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:16px 0 14px; }
   @media (max-width:720px){ .kpis { grid-template-columns:repeat(2,1fr);} }
   .tile { background:var(--surface); border:1px solid var(--border); border-radius:14px;
     padding:16px 16px 14px; box-shadow:var(--shadow); }
@@ -48,6 +65,13 @@
   .tile .value { font-size:29px; font-weight:700; letter-spacing:-0.02em; margin-top:6px; }
   .tile .delta { font-size:12.5px; margin-top:4px; font-weight:600; }
   .delta.up { color:var(--good);} .delta.down { color:var(--bad);} .delta .vs { color:var(--muted); font-weight:400; }
+
+  .analysis { background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--series-1);
+    border-radius:12px; padding:13px 16px; margin:0 0 20px; box-shadow:var(--shadow); }
+  .analysis .h { font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); margin-bottom:4px; }
+  .analysis p { margin:0; font-size:14px; color:var(--text-secondary); line-height:1.55; }
+  .analysis b { color:var(--text-primary); font-weight:600; }
+  .up-txt { color:var(--good); font-weight:600; } .down-txt { color:var(--bad); font-weight:600; }
 
   .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
   @media (max-width:860px){ .grid2 { grid-template-columns:1fr;} }
@@ -64,28 +88,44 @@
   th:first-child,td:first-child { text-align:left; }
   thead th { color:var(--muted); font-weight:600; font-size:11.5px; text-transform:uppercase; letter-spacing:0.03em; border-bottom:1px solid var(--baseline);}
   tbody tr { border-bottom:1px solid var(--grid);}
-  tbody tr:hover { background:rgba(42,120,214,0.05);}
+  tbody tr:hover { background:var(--accent-wash);}
   tbody tr.partial td { color:var(--muted); font-style:italic;}
   .tnote { font-size:11.5px; color:var(--muted); padding:8px 12px 0; }
 
-  .status { display:block; font-size:12px; color:var(--muted); margin-top:20px; }
-  .tt { position:fixed; pointer-events:none; z-index:10; opacity:0; transition:opacity .08s;
+  .status { display:block; font-size:12px; color:var(--muted); margin:20px 0 40px; }
+  .tt { position:fixed; pointer-events:none; z-index:30; opacity:0; transition:opacity .08s;
     background:var(--surface); border:1px solid var(--border); border-radius:8px; box-shadow:var(--shadow);
     padding:8px 10px; font-size:12.5px; color:var(--text-primary); transform:translate(-50%,-115%); }
   .tt b { font-size:13px; } .tt .row { color:var(--text-secondary); margin-top:2px; }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="page">
-    <div class="brandrow">
-      <h1>SB Mobile Detailing — Marketing Dashboard</h1>
-      <span class="badge" id="mode-badge">Sample data</span>
-    </div>
-    <div class="sub" id="range">Last 90 days</div>
-    <div class="source">Sources: Google Ads · Google Analytics (GA4) · Search Console — auto-synced to Google Sheet, updates on load</div>
-  </header>
+<header class="page"><div class="wrap">
+  <div class="brandrow">
+    <h1>SB Mobile Detailing — Marketing Dashboard</h1>
+    <span class="badge" id="mode-badge">Sample data</span>
+  </div>
+  <div class="sub" id="range">Last 90 days</div>
+  <div class="source">Sources: Google Ads · Google Analytics (GA4) · Search Console — auto-synced to Google Sheet, updates on load</div>
+</div></header>
 
+<div class="toolbar"><div class="inner">
+  <nav class="nav">
+    <a href="#sec-ads"><span class="d" style="background:var(--series-1)"></span>Google Ads</a>
+    <a href="#sec-analytics"><span class="d" style="background:var(--series-2)"></span>Analytics</a>
+    <a href="#sec-search"><span class="d" style="background:var(--series-3)"></span>Search Console</a>
+  </nav>
+  <div class="filter">
+    <span class="lbl">Show:</span>
+    <span class="seg" id="seg">
+      <button data-w="7">7 days</button>
+      <button data-w="30">30 days</button>
+      <button data-w="90">90 days</button>
+    </span>
+  </div>
+</div></div>
+
+<div class="wrap">
   <div id="sections"></div>
   <span class="status" id="status"></span>
 </div>
@@ -93,15 +133,14 @@
 
 <script>
 /* ============================================================================
-   CONFIG — paste each tab's "Publish to web → CSV" link here.
-   Leave blank to preview with built-in sample data.
-   Every tab is DAILY (rolling last 90 days), keyed by a "Date" column.
+   CONFIG — published-to-web CSV links for each tab (Date-keyed, daily).
    ============================================================================ */
 const ADS_CSV       = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRO5FOESHQfGjP6uZhogNMprPhIAfsT9sewDYTsbAjhLE6cUleyBqiVrWa85-6YMuMkqS_I6inNhW1H/pub?gid=0&single=true&output=csv";
 const ANALYTICS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRO5FOESHQfGjP6uZhogNMprPhIAfsT9sewDYTsbAjhLE6cUleyBqiVrWa85-6YMuMkqS_I6inNhW1H/pub?gid=532718338&single=true&output=csv";
 const SEARCH_CSV    = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRO5FOESHQfGjP6uZhogNMprPhIAfsT9sewDYTsbAjhLE6cUleyBqiVrWa85-6YMuMkqS_I6inNhW1H/pub?gid=255381674&single=true&output=csv";
 
-const TABLE_DAYS = 21;   // how many recent days to list in each detail table
+const DEFAULT_WINDOW = 30;
+const TABLE_MAX = 31;
 
 /* ---- Formatters ---- */
 const money  = v => "$" + Math.round(v).toLocaleString();
@@ -126,7 +165,6 @@ function parseCSV(text){
 }
 const num = s => { const n=parseFloat(String(s).replace(/[^0-9.\-]/g,"")); return isNaN(n)?0:n; };
 
-/* map CSV → array of {date,label,partial,...metrics}. colmap: {field:"header text"} */
 function shape(csvText, colmap){
   const tISO=todayISO();
   const rows=parseCSV(csvText.trim());
@@ -142,32 +180,19 @@ function shape(csvText, colmap){
   }).filter(o=>/^\d{4}-\d{2}-\d{2}$/.test(o.date)).sort((a,b)=>a.date<b.date?-1:1).slice(-90);
 }
 
-/* ---- built-in daily sample generator (preview only) ---- */
 function genSample(kind){
   const out=[]; const tISO=todayISO();
   for(let i=89;i>=0;i--){
     const d=new Date(); d.setDate(d.getDate()-i);
     const iso=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
-    const dow=d.getDay(); const wk=(dow===0||dow===6)?0.62:1;            // weekend dip
-    const wave=1+0.18*Math.sin(i/9)+0.10*Math.sin(i/3.5);
+    const dow=d.getDay(); const wk=(dow===0||dow===6)?0.62:1; const wave=1+0.18*Math.sin(i/9)+0.10*Math.sin(i/3.5);
     const o={ date:iso, label:dayLabel(iso), partial: iso>=tISO };
-    if(kind==="ads"){
-      o.clicks=Math.round(42*wave*wk);
-      o.conv=Math.max(0,Math.round((2.4*wave*wk)*10)/10);
-      o.cost=Math.round(168*wave*wk*100)/100;
-      o.cpl=o.conv?Math.round(o.cost/o.conv*100)/100:0;
-    } else if(kind==="analytics"){
-      o.sessions=Math.round(138*wave*wk);
-      o.users=Math.round(o.sessions*0.86);
-      o.engaged=Math.round(o.sessions*0.68);
-      o.pageviews=Math.round(o.sessions*3.1);
-      o.keyev=Math.max(0,Math.round(3.0*wave*wk));
-    } else {
-      o.impr=Math.round(1850*wave);
-      o.clicks=Math.round(o.impr*(0.035+0.003*Math.sin(i/12)));
-      o.ctr=Math.round(o.clicks/o.impr*10000)/100;
-      o.position=Math.round((12.4-0.6*Math.sin(i/15))*10)/10;
-    }
+    if(kind==="ads"){ o.clicks=Math.round(42*wave*wk); o.conv=Math.max(0,Math.round(2.4*wave*wk*10)/10);
+      o.cost=Math.round(168*wave*wk*100)/100; o.cpl=o.conv?Math.round(o.cost/o.conv*100)/100:0; }
+    else if(kind==="analytics"){ o.sessions=Math.round(138*wave*wk); o.users=Math.round(o.sessions*0.86);
+      o.engaged=Math.round(o.sessions*0.68); o.pageviews=Math.round(o.sessions*3.1); o.keyev=Math.max(0,Math.round(3*wave*wk)); }
+    else { o.impr=Math.round(1850*wave); o.clicks=Math.round(o.impr*(0.035+0.003*Math.sin(i/12)));
+      o.ctr=Math.round(o.clicks/o.impr*10000)/100; o.position=Math.round((12.4-0.6*Math.sin(i/15))*10)/10; }
     out.push(o);
   }
   return out;
@@ -178,7 +203,7 @@ const tt=document.getElementById("tt");
 function showTip(html,x,y){ tt.innerHTML=html; tt.style.left=x+"px"; tt.style.top=y+"px"; tt.style.opacity=1; }
 function hideTip(){ tt.style.opacity=0; }
 
-/* ---- line/area chart (handles ~90 daily points) ---- */
+/* ---- line/area chart ---- */
 function lineChart(svg,data,key,color,fmt,unit,wide){
   const W=wide?1080:520,H=wide?230:250,m={t:16,r:16,b:30,l:54}, iw=W-m.l-m.r, ih=H-m.t-m.b;
   const vals=data.map(d=>d[key]); const max=Math.max(...vals)*1.1||1, min=Math.min(0,...vals);
@@ -197,13 +222,11 @@ function lineChart(svg,data,key,color,fmt,unit,wide){
   g+=`<path d="${al} L${x(lc).toFixed(1)},${y(min)} L${x(0).toFixed(1)},${y(min)} Z" fill="${color}" opacity="0.09"/>`;
   for(let i=1;i<data.length;i++){ const dash=(data[i].partial||data[i-1].partial)?' stroke-dasharray="4 3"':'';
     g+=`<path d="M${x(i-1).toFixed(1)},${y(data[i-1][key]).toFixed(1)} L${x(i).toFixed(1)},${y(data[i][key]).toFixed(1)}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round"${dash}/>`; }
-  // hover hit-strips
   const bw=iw/data.length;
   data.forEach((d,i)=>{ g+=`<rect x="${(x(i)-bw/2).toFixed(1)}" y="${m.t}" width="${bw.toFixed(1)}" height="${ih}" fill="transparent" class="hit" data-i="${i}"/>`; });
-  // markers only on hover-selected via JS; draw endpoint marker
-  g+=`<circle id="mk-${key}" cx="0" cy="0" r="4" fill="var(--surface)" stroke="${color}" stroke-width="2" opacity="0"/>`;
+  g+=`<circle id="mk" cx="0" cy="0" r="4" fill="var(--surface)" stroke="${color}" stroke-width="2" opacity="0"/>`;
   svg.innerHTML=g;
-  const mk=svg.querySelector(`#mk-${key}`);
+  const mk=svg.querySelector("#mk");
   svg.querySelectorAll(".hit").forEach(h=>{ h.addEventListener("mousemove",e=>{ const i=+h.dataset.i,d=data[i];
     mk.setAttribute("cx",x(i)); mk.setAttribute("cy",y(d[key])); mk.setAttribute("opacity","1");
     showTip(`<b>${d.label}${d.partial?" · today":""}</b><div class="row">${fmt(d[key])} ${unit}</div>`,e.clientX,e.clientY); });
@@ -212,28 +235,37 @@ function lineChart(svg,data,key,color,fmt,unit,wide){
 
 function el(tag,cls,html){ const e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e; }
 const sum=(rows,k)=>rows.reduce((a,d)=>a+(d[k]||0),0);
+const chg=(c,p)=> p? (c-p)/p*100 : null;
+function arrow(x,goodUp){ if(x===null) return ""; const up=x>=0, good=goodUp?up:!up;
+  return ` <span class="${good?"up-txt":"down-txt"}">${up?"up":"down"} ${Math.abs(x).toFixed(0)}%</span>`; }
 
-/* ---- build one section ---- */
-function buildSection(cfg,data){
-  const complete=data.filter(d=>!d.partial);
-  const last7=complete.slice(-7), prev7=complete.slice(-14,-7);
+/* ---- build one section for a given window ---- */
+function buildSection(cfg,full,window){
+  const wd=full.slice(-window);
+  const complete=full.filter(d=>!d.partial);
+  const cur=complete.slice(-window), prev=complete.slice(-2*window,-window);
   const root=document.getElementById("sections");
 
-  const h=el("div","section-h");
+  const h=el("div","section-h"); h.id="sec-"+cfg.key;
   const dot=el("span","dot"); dot.style.background=`var(${cfg.color})`; h.appendChild(dot);
   h.appendChild(el("h2",null,cfg.title));
-  h.appendChild(el("span","note","Last 7 days vs previous 7"));
+  h.appendChild(el("span","note",`Last ${window} days${prev.length?` vs previous ${window}`:""}`));
   root.appendChild(h);
 
   const kp=el("div","kpis");
   cfg.tiles.forEach(t=>{
-    const cur=t.val(last7), prev=prev7.length?t.val(prev7):cur;
-    const d=prev?(cur-prev)/prev*100:0, up=d>=0, good=t.goodUp?up:!up;
+    const cv=t.val(cur), pv=prev.length?t.val(prev):null, d=chg(cv,pv);
+    const up=d>=0, good=t.goodUp?up:!up;
     kp.appendChild(el("div","tile",
-      `<div class="label">${t.label}</div><div class="value">${t.fmt(cur)}</div>
-       <div class="delta ${good?"up":"down"}">${up?"▲":"▼"} ${Math.abs(d).toFixed(0)}% <span class="vs">vs prev 7d</span></div>`));
+      `<div class="label">${t.label}</div><div class="value">${t.fmt(cv)}</div>
+       <div class="delta ${d===null?"":(good?"up":"down")}">${d===null?'<span class="vs">—</span>':`${up?"▲":"▼"} ${Math.abs(d).toFixed(0)}% <span class="vs">vs prev ${window}d</span>`}</div>`));
   });
   root.appendChild(kp);
+
+  // plain-English analysis
+  const a=el("div","analysis"); a.style.borderLeftColor=`var(${cfg.color})`;
+  a.innerHTML=`<div class="h">What this means</div><p>${cfg.analyze(cur,prev,window)}</p>`;
+  root.appendChild(a);
 
   const g2=el("div","grid2"); const svgs=[];
   cfg.charts.filter(c=>!c.wide).forEach(c=>{
@@ -249,85 +281,124 @@ function buildSection(cfg,data){
     svg.setAttribute("class","chart"); svg.setAttribute("viewBox","0 0 1080 230");
     card.appendChild(svg); root.appendChild(card); svgs.push({c,svg});
   });
-  svgs.forEach(({c,svg})=>lineChart(svg,data,c.key,`var(${c.color})`,c.fmt,c.unit,!!c.wide));
+  svgs.forEach(({c,svg})=>lineChart(svg,wd,c.key,`var(${c.color})`,c.fmt,c.unit,!!c.wide));
 
   const tcard=el("div","card",`<h3>Daily detail</h3><p class="cap">Most recent first</p>`);
   const tw=el("div","tablewrap");
   const thead="<tr>"+cfg.columns.map(c=>`<th>${c.label}</th>`).join("")+"</tr>";
-  const shown=[...data].reverse().slice(0,TABLE_DAYS);
+  const shown=[...wd].reverse().slice(0,TABLE_MAX);
   const tbody=shown.map(d=>`<tr class="${d.partial?"partial":""}">`+
     cfg.columns.map(c=>`<td>${c.key==="label"?(d.label+(d.partial?" · today":"")):c.fmt(d[c.key])}</td>`).join("")+"</tr>").join("");
   tw.appendChild(el("table",null,"<thead>"+thead+"</thead><tbody>"+tbody+"</tbody>"));
   tcard.appendChild(tw);
-  if(data.length>TABLE_DAYS) tcard.appendChild(el("div","tnote",`Showing the most recent ${TABLE_DAYS} of ${data.length} days.`));
+  if(wd.length>TABLE_MAX) tcard.appendChild(el("div","tnote",`Showing the most recent ${TABLE_MAX} of ${wd.length} days in view.`));
   root.appendChild(tcard);
 }
 
-/* ---- section configs ---- */
+/* ---- section configs (with analysis writers) ---- */
 const CONFIGS=[
   { key:"ads", title:"Google Ads", color:"--series-1",
     colmap:{clicks:"clicks", conv:"conversions", cpl:"cost / conv", cost:"cost"},
     tiles:[
-      {label:"Spend (7d)",key:"cost",fmt:money,goodUp:true,val:r=>sum(r,"cost")},
-      {label:"Conversions (7d)",key:"conv",fmt:int,goodUp:true,val:r=>sum(r,"conv")},
+      {label:"Spend",key:"cost",fmt:money,goodUp:true,val:r=>sum(r,"cost")},
+      {label:"Conversions",key:"conv",fmt:int,goodUp:true,val:r=>sum(r,"conv")},
       {label:"Cost / conv.",key:"cpl",fmt:money2,goodUp:false,val:r=>{const c=sum(r,"cost"),v=sum(r,"conv");return v?c/v:0;}},
-      {label:"Clicks (7d)",key:"clicks",fmt:int,goodUp:true,val:r=>sum(r,"clicks")} ],
+      {label:"Clicks",key:"clicks",fmt:int,goodUp:true,val:r=>sum(r,"clicks")} ],
     charts:[
       {key:"conv",title:"Conversions / day",cap:"Leads from Google Ads",color:"--series-1",fmt:int,unit:"conversions"},
       {key:"cpl",title:"Cost per conversion",cap:"Lower is better",color:"--series-4",fmt:v=>"$"+Math.round(v),unit:"CPL"},
       {key:"cost",title:"Ad spend / day",cap:"Daily Google Ads cost",color:"--series-2",fmt:money,unit:"spend",wide:true} ],
     columns:[ {label:"Date",key:"label"},{label:"Spend",key:"cost",fmt:money},{label:"Clicks",key:"clicks",fmt:int},
-              {label:"Conversions",key:"conv",fmt:v=>v.toFixed(0)},{label:"Cost / conv.",key:"cpl",fmt:money2} ] },
+              {label:"Conversions",key:"conv",fmt:v=>v.toFixed(0)},{label:"Cost / conv.",key:"cpl",fmt:money2} ],
+    analyze:(cur,prev,w)=>{
+      const spend=sum(cur,"cost"),conv=sum(cur,"conv"),clicks=sum(cur,"clicks"),cpl=conv?spend/conv:0;
+      const dConv=chg(conv,sum(prev,"conv")), dCpl=chg(cpl, sum(prev,"conv")?sum(prev,"cost")/sum(prev,"conv"):0);
+      let read="";
+      if(dConv!==null&&dCpl!==null){
+        if(dConv>=0&&dCpl<=0) read="That's an <b>efficient stretch</b> — more leads at a lower cost each.";
+        else if(dConv<0&&dCpl>0) read="Leads slowed and got more expensive — <b>worth a look</b> at which campaigns are driving cost.";
+        else if(dCpl>0) read="Leads held up but each one cost more — keep an eye on cost per conversion.";
+        else read="Cost per lead improved even as volume shifted — a good efficiency sign.";
+      }
+      return `In the last <b>${w} days</b>, SB Mobile Detailing spent <b>${money(spend)}</b> on Google Ads and generated <b>${int(conv)} conversions</b> from ${int(clicks)} clicks, at an average <b>${money2(cpl)}</b> per conversion.`
+        + (prev.length?` Versus the previous ${w} days, conversions are${arrow(dConv,true)} and cost per conversion is${arrow(dCpl,false)}. ${read}`:"");
+    } },
 
   { key:"analytics", title:"Google Analytics (GA4)", color:"--series-2",
     colmap:{sessions:"sessions", users:"users", engaged:"engaged", pageviews:"page views", keyev:"key events"},
     tiles:[
-      {label:"Sessions (7d)",key:"sessions",fmt:int,goodUp:true,val:r=>sum(r,"sessions")},
-      {label:"Users (7d)",key:"users",fmt:int,goodUp:true,val:r=>sum(r,"users")},
-      {label:"Engaged (7d)",key:"engaged",fmt:int,goodUp:true,val:r=>sum(r,"engaged")},
-      {label:"Key events (7d)",key:"keyev",fmt:int,goodUp:true,val:r=>sum(r,"keyev")} ],
+      {label:"Sessions",key:"sessions",fmt:int,goodUp:true,val:r=>sum(r,"sessions")},
+      {label:"Users",key:"users",fmt:int,goodUp:true,val:r=>sum(r,"users")},
+      {label:"Engaged",key:"engaged",fmt:int,goodUp:true,val:r=>sum(r,"engaged")},
+      {label:"Key events",key:"keyev",fmt:int,goodUp:true,val:r=>sum(r,"keyev")} ],
     charts:[
       {key:"sessions",title:"Sessions / day",cap:"Website visits",color:"--series-2",fmt:int,unit:"sessions"},
       {key:"keyev",title:"Key events / day",cap:"Conversions tracked in GA4",color:"--series-1",fmt:int,unit:"key events"},
       {key:"pageviews",title:"Page views / day",cap:"Total pages viewed",color:"--series-4",fmt:int,unit:"page views",wide:true} ],
     columns:[ {label:"Date",key:"label"},{label:"Sessions",key:"sessions",fmt:int},{label:"Users",key:"users",fmt:int},
-              {label:"Engaged",key:"engaged",fmt:int},{label:"Page views",key:"pageviews",fmt:int},{label:"Key events",key:"keyev",fmt:int} ] },
+              {label:"Engaged",key:"engaged",fmt:int},{label:"Page views",key:"pageviews",fmt:int},{label:"Key events",key:"keyev",fmt:int} ],
+    analyze:(cur,prev,w)=>{
+      const s=sum(cur,"sessions"),u=sum(cur,"users"),eng=sum(cur,"engaged"),ke=sum(cur,"keyev");
+      const engRate=s?eng/s*100:0, dS=chg(s,sum(prev,"sessions")), dKe=chg(ke,sum(prev,"keyev"));
+      return `Over the last <b>${w} days</b>, the website had <b>${int(s)} sessions</b> from <b>${int(u)} users</b>, with <b>${int(ke)} key events</b> (tracked conversions). About <b>${engRate.toFixed(0)}%</b> of visits were engaged.`
+        + (prev.length?` Sessions are${arrow(dS,true)} and key events are${arrow(dKe,true)} versus the previous ${w} days.`:"");
+    } },
 
   { key:"search", title:"Search Console", color:"--series-3",
     colmap:{clicks:"clicks", impr:"impressions", ctr:"ctr", position:"position"},
     tiles:[
-      {label:"Clicks (7d)",key:"clicks",fmt:int,goodUp:true,val:r=>sum(r,"clicks")},
-      {label:"Impressions (7d)",key:"impr",fmt:int,goodUp:true,val:r=>sum(r,"impr")},
+      {label:"Clicks",key:"clicks",fmt:int,goodUp:true,val:r=>sum(r,"clicks")},
+      {label:"Impressions",key:"impr",fmt:int,goodUp:true,val:r=>sum(r,"impr")},
       {label:"CTR",key:"ctr",fmt:pct,goodUp:true,val:r=>{const c=sum(r,"clicks"),im=sum(r,"impr");return im?c/im*100:0;}},
-      {label:"Avg position",key:"position",fmt:pos,goodUp:false,val:r=>{const w=r.reduce((a,d)=>a+d.position*d.impr,0),im=sum(r,"impr");return im?w/im:0;}} ],
+      {label:"Avg position",key:"position",fmt:pos,goodUp:false,val:r=>{const wgt=r.reduce((a,d)=>a+d.position*d.impr,0),im=sum(r,"impr");return im?wgt/im:0;}} ],
     charts:[
       {key:"clicks",title:"Search clicks / day",cap:"Organic clicks from Google",color:"--series-3",fmt:int,unit:"clicks"},
       {key:"impr",title:"Impressions / day",cap:"Times shown in search",color:"--series-1",fmt:int,unit:"impressions"},
       {key:"position",title:"Average position",cap:"Lower is better",color:"--series-4",fmt:pos,unit:"avg position",wide:true} ],
     columns:[ {label:"Date",key:"label"},{label:"Clicks",key:"clicks",fmt:int},{label:"Impressions",key:"impr",fmt:int},
-              {label:"CTR",key:"ctr",fmt:pct},{label:"Avg position",key:"position",fmt:pos} ] },
+              {label:"CTR",key:"ctr",fmt:pct},{label:"Avg position",key:"position",fmt:pos} ],
+    analyze:(cur,prev,w)=>{
+      const c=sum(cur,"clicks"),im=sum(cur,"impr"),ctr=im?c/im*100:0;
+      const posW=im?cur.reduce((a,d)=>a+d.position*d.impr,0)/im:0;
+      const dC=chg(c,sum(prev,"clicks"));
+      const pPos=sum(prev,"impr")?prev.reduce((a,d)=>a+d.position*d.impr,0)/sum(prev,"impr"):0;
+      const dPos=chg(posW,pPos);
+      let posRead = dPos!==null ? (dPos<0?'<span class="up-txt">improved</span>':'<span class="down-txt">slipped</span>') : "";
+      return `In organic search over the last <b>${w} days</b>, SBD earned <b>${int(c)} clicks</b> from <b>${int(im)} impressions</b> (a <b>${ctr.toFixed(2)}% CTR</b>), at an average position of <b>${pos(posW)}</b>.`
+        + (prev.length?` Clicks are${arrow(dC,true)} and the average ranking ${posRead} versus the previous ${w} days (lower position = higher on the page).`:"");
+    } },
 ];
 
 const SOURCES={ ads:ADS_CSV, analytics:ANALYTICS_CSV, search:SEARCH_CSV };
+const DATA={}; let anyLive=false, anyErr="";
 
-async function loadSource(cfg){
-  const url=SOURCES[cfg.key];
-  if(url){ try{ const res=await fetch(url); if(!res.ok) throw new Error("HTTP "+res.status);
-    return { data:shape(await res.text(),cfg.colmap), live:true }; }
-    catch(e){ return { data:genSample(cfg.key), live:false, err:e.message }; } }
-  return { data:genSample(cfg.key), live:false };
+async function loadAll(){
+  for(const cfg of CONFIGS){
+    const url=SOURCES[cfg.key];
+    if(url){ try{ const res=await fetch(url); if(!res.ok) throw new Error("HTTP "+res.status);
+      DATA[cfg.key]=shape(await res.text(),cfg.colmap); anyLive=true; continue; }
+      catch(e){ anyErr=e.message; } }
+    DATA[cfg.key]=genSample(cfg.key);
+  }
+}
+
+function rebuild(window){
+  const root=document.getElementById("sections"); root.innerHTML="";
+  let minD="9999-99-99", maxD="0";
+  CONFIGS.forEach(cfg=>{
+    const wd=(DATA[cfg.key]||[]).slice(-window);
+    if(wd.length){ if(wd[0].date<minD)minD=wd[0].date; if(wd[wd.length-1].date>maxD)maxD=wd[wd.length-1].date; }
+    buildSection(cfg,DATA[cfg.key]||[],window);
+  });
+  document.querySelectorAll("#seg button").forEach(b=>b.classList.toggle("active",+b.dataset.w===window));
+  if(maxD!=="0") document.getElementById("range").textContent=`${dayLabel(minD)} – ${dayLabel(maxD)} · last ${window} days`;
 }
 
 async function boot(){
-  let anyLive=false, anyErr="", first="", last="";
-  for(const cfg of CONFIGS){
-    const {data,live,err}=await loadSource(cfg);
-    if(live)anyLive=true; if(err)anyErr=err;
-    if(data.length){ first=first||data[0].label; last=data[data.length-1].label; }
-    buildSection(cfg,data);
-  }
+  await loadAll();
   document.getElementById("mode-badge").textContent = anyLive?"Live · Google Sheet":"Sample data";
-  if(first&&last) document.getElementById("range").textContent = `${first} – ${last} · last 90 days`;
+  document.querySelectorAll("#seg button").forEach(b=>b.addEventListener("click",()=>rebuild(+b.dataset.w)));
+  rebuild(DEFAULT_WINDOW);
   const st=document.getElementById("status");
   if(!ADS_CSV&&!ANALYTICS_CSV&&!SEARCH_CSV) st.textContent="Previewing sample data — paste your 3 published-CSV links into the CONFIG block to go live.";
   else if(anyErr) st.textContent="Some sources could not load ("+anyErr+") — showing sample where needed.";
