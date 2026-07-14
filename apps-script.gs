@@ -28,6 +28,12 @@ var DAYS_BACK       = 90;                            // rolling window of histor
 var GA4_TAB         = "analytics";
 var GSC_TAB         = "search";
 
+// Klaviyo (email/SMS). Put the PRIVATE key in Script Properties as KLAVIYO_KEY
+// (Project Settings → Script Properties) — NOT here in the code.
+var KLAVIYO_TAB     = "klaviyo";
+var KLAVIYO_REV     = "2024-10-15";
+var KLAVIYO_CONV_METRIC = "Rja2JP";                  // "Received Email" metric id (report requires one; its conv stats are unused)
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function tz_()    { return Session.getScriptTimeZone(); }
 function today_() { return Utilities.formatDate(new Date(), tz_(), "yyyy-MM-dd"); }
@@ -42,6 +48,65 @@ function writeTab_(name, values) {
   var sh = ss.getSheetByName(name) || ss.insertSheet(name);
   sh.clearContents();
   sh.getRange(1, 1, values.length, values[0].length).setValues(values);
+}
+function grid_(rows, w) { return rows.map(function (r) { var a = r.slice(); while (a.length < w) a.push(""); return a; }); }
+function r2_(n) { return Math.round(n * 100) / 100; }
+
+// ── Klaviyo (email + SMS) → `klaviyo` tab ─────────────────────────────────────
+function pullKlaviyo() {
+  var key = PropertiesService.getScriptProperties().getProperty("KLAVIYO_KEY");
+  if (!key) throw new Error("Set Script Property KLAVIYO_KEY first (Project Settings → Script Properties).");
+  function kf(path, method, body) {
+    var opt = { method: method || "get", muteHttpExceptions: true,
+      headers: { "Authorization": "Klaviyo-API-Key " + key, "revision": KLAVIYO_REV, "accept": "application/json" } };
+    if (body) { opt.contentType = "application/json"; opt.payload = JSON.stringify(body); }
+    return JSON.parse(UrlFetchApp.fetch("https://a.klaviyo.com/api/" + path, opt).getContentText());
+  }
+
+  // campaign performance (email + sms, last 30 days)
+  var rep = kf("campaign-values-reports/", "post", { data: { type: "campaign-values-report", attributes: {
+    timeframe: { key: "last_30_days" }, conversion_metric_id: KLAVIYO_CONV_METRIC,
+    statistics: ["recipients", "delivered", "clicks_unique", "click_rate"] } } });
+  var results = (rep.data && rep.data.attributes && rep.data.attributes.results) || [];
+
+  // campaign names + send dates
+  var names = {};
+  ["email", "sms"].forEach(function (ch) {
+    var d = kf("campaigns/?filter=equals(messages.channel,'" + ch + "')");
+    (d.data || []).forEach(function (c) { names[c.id] = { name: c.attributes.name, send: (c.attributes.send_time || "").substring(0, 10) }; });
+  });
+
+  var chan = { email: { n: 0, rec: 0, clk: 0 }, sms: { n: 0, rec: 0, clk: 0 } }, camps = [];
+  results.forEach(function (x) {
+    var g = x.groupings, s = x.statistics, ch = g.send_channel;
+    if (chan[ch]) { chan[ch].n++; chan[ch].rec += s.recipients || 0; chan[ch].clk += s.clicks_unique || 0; }
+    var nm = names[g.campaign_id] || {};
+    camps.push({ date: nm.send || "", channel: ch, name: nm.name || "(campaign)",
+      rec: Math.round(s.recipients || 0), clk: Math.round(s.clicks_unique || 0), ctr: r2_((s.click_rate || 0) * 100) });
+  });
+  camps.sort(function (a, b) { return a.date < b.date ? 1 : -1; });
+
+  // list sizes (consent / growth)
+  var lists = [];
+  (kf("lists/").data || []).forEach(function (x) {
+    var one = kf("lists/" + x.id + "/?additional-fields[list]=profile_count");
+    var cnt = one.data && one.data.attributes ? one.data.attributes.profile_count : "";
+    lists.push([x.attributes.name, (cnt == null ? "" : cnt)]);
+  });
+
+  var out = [["KLAVIYO - EMAIL & SMS SUMMARY"],
+    ["Generated", Utilities.formatDate(new Date(), tz_(), "yyyy-MM-dd HH:mm")],
+    ["Window", "last 30 days"], [],
+    ["CHANNEL SUMMARY"], ["Channel", "Campaigns", "Recipients", "Clicks", "CTR %"]];
+  ["email", "sms"].forEach(function (ch) { var c = chan[ch];
+    out.push([ch === "email" ? "Email" : "SMS", c.n, c.rec, c.clk, c.rec ? r2_(c.clk / c.rec * 100) : 0]); });
+  out.push([], ["RECENT CAMPAIGNS"], ["Date", "Channel", "Campaign", "Recipients", "Clicks", "CTR %"]);
+  camps.slice(0, 16).forEach(function (c) { out.push([c.date, c.channel === "email" ? "Email" : "SMS", c.name, c.rec, c.clk, c.ctr]); });
+  out.push([], ["LISTS"], ["List", "Subscribers"]);
+  lists.forEach(function (l) { out.push(l); });
+
+  writeTab_(KLAVIYO_TAB, grid_(out, 6));
+  Logger.log("Klaviyo: wrote " + camps.length + " campaigns, " + lists.length + " lists.");
 }
 
 // ── GA4 → `analytics` tab ────────────────────────────────────────────────────

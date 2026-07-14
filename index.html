@@ -142,6 +142,7 @@
     <a href="#sec-ads"><span class="d" style="background:var(--series-1)"></span>Google Ads</a>
     <a href="#sec-analytics"><span class="d" style="background:var(--series-2)"></span>Analytics</a>
     <a href="#sec-search"><span class="d" style="background:var(--series-3)"></span>Search Console</a>
+    <a href="#sec-klaviyo"><span class="d" style="background:var(--series-4)"></span>Email &amp; SMS</a>
   </nav>
   <div class="filter">
     <span class="lbl">Show:</span>
@@ -563,6 +564,84 @@ function renderAdsBreakdown(root,a){
   root.appendChild(ch);
 }
 
+/* ---- Klaviyo (email + SMS) ---- */
+const KLAVIYO_CSV = "";   // set to the published `klaviyo` tab CSV to go live
+const KLAVIYO_SNAPSHOT = `KLAVIYO - EMAIL & SMS SUMMARY
+Generated,2026-07-14 08:00
+Window,last 30 days
+,
+CHANNEL SUMMARY
+Channel,Campaigns,Recipients,Clicks,CTR %
+Email,5,23163,159,0.69
+SMS,5,13105,2014,15.37
+,
+RECENT CAMPAIGNS
+Date,Channel,Campaign,Recipients,Clicks,CTR %
+2026-07-13,SMS,[SMS] July 13 Flash,2664,414,15.71
+2026-07-13,Email,July 13 Flash,4723,22,0.47
+2026-07-06,SMS,[SMS] July 6 Flash,2639,409,15.66
+2026-07-06,Email,July 6 Flash,4669,33,0.71
+2026-06-29,SMS,[SMS] June 29 Flash,2631,399,15.32
+2026-06-29,Email,June 29 Flash,4629,38,0.82
+2026-06-22,SMS,[SMS] June 22 Flash,2610,400,15.49
+2026-06-22,Email,June 22 Flash,4587,30,0.66
+,
+LISTS
+List,Subscribers
+SMS Subscribers,6045
+Smith Bros Mobile Detailing,`;
+let KLAVIYO=null;
+
+function parseKlaviyo(text){
+  const rows=parseCSV(text.trim());
+  const out={generated:"",channels:[],campaigns:[],lists:[]};
+  let mode="";
+  for(const r of rows){
+    const a=(r[0]||"").trim();
+    if(a==="Generated"){out.generated=(r[1]||"").trim();continue;}
+    if(a==="CHANNEL SUMMARY"){mode="chan";continue;}
+    if(a==="RECENT CAMPAIGNS"){mode="camp";continue;}
+    if(a==="LISTS"){mode="lists";continue;}
+    if(a==="Channel"||a==="Date"||a==="List"){continue;}
+    if(!a){continue;}
+    if(mode==="chan") out.channels.push({channel:a,campaigns:num(r[1]),recipients:num(r[2]),clicks:num(r[3]),ctr:num(r[4])});
+    else if(mode==="camp") out.campaigns.push({date:a,channel:(r[1]||"").trim(),name:(r[2]||"").trim(),recipients:num(r[3]),clicks:num(r[4]),ctr:num(r[5])});
+    else if(mode==="lists") out.lists.push({name:a,count:(r[1]!=null&&String(r[1]).trim()!=="")?num(r[1]):null});
+  }
+  return out;
+}
+
+function renderKlaviyoSection(root){
+  const k=KLAVIYO; if(!k||(!k.channels.length&&!k.campaigns.length)) return;
+  const h=el("div","section-h"); h.id="sec-klaviyo";
+  const dot=el("span","dot"); dot.style.background="var(--series-4)"; h.appendChild(dot);
+  h.appendChild(el("h2",null,"Email & SMS (Klaviyo)"));
+  h.appendChild(el("span","note","Last 30 days"));
+  root.appendChild(h);
+
+  const em=k.channels.find(c=>/email/i.test(c.channel))||{}, sm=k.channels.find(c=>/sms/i.test(c.channel))||{};
+  const kp=el("div","kpis");
+  [{label:"Email recipients",v:int(em.recipients||0)},{label:"Email CTR",v:pct(em.ctr||0)},
+   {label:"SMS recipients",v:int(sm.recipients||0)},{label:"SMS CTR",v:pct(sm.ctr||0)}].forEach(t=>{
+    kp.appendChild(el("div","tile",`<div class="label">${t.label}</div><div class="value">${t.v}</div>`)); });
+  root.appendChild(kp);
+
+  const a=el("div","analysis"); a.style.borderLeftColor="var(--series-4)";
+  a.innerHTML=`<div class="h">What this means</div><p>Over the last 30 days, <b>SMS drove ${int(sm.clicks||0)} clicks at ${pct(sm.ctr||0)}</b> versus email's ${int(em.clicks||0)} at ${pct(em.ctr||0)} — <b>SMS is doing the heavy lifting</b>. We report reach and engagement here, not revenue: Klaviyo-attributed revenue currently reads $0 because there is no valued booking event yet, so revenue/ROAS stays out until that's wired in. Open rate is intentionally omitted (Apple Mail privacy inflates it — it isn't a real signal).</p>`;
+  root.appendChild(a);
+
+  const cc=el("div","card");
+  let ct=`<h3>Recent campaigns</h3><p class="cap">Email &amp; SMS sends — last 30 days</p><div class="tablewrap"><table><thead><tr><th>Date</th><th>Channel</th><th>Campaign</th><th>Recipients</th><th>Clicks</th><th>CTR</th></tr></thead><tbody>`;
+  k.campaigns.forEach(c=>{ ct+=`<tr><td>${dayLabel(c.date)}</td><td>${c.channel}</td><td>${c.name}</td><td>${int(c.recipients)}</td><td>${int(c.clicks)}</td><td>${pct(c.ctr)}</td></tr>`; });
+  ct+=`</tbody></table></div>`; cc.innerHTML=ct; root.appendChild(cc);
+
+  const lc=el("div","card");
+  let lt=`<h3>List growth &amp; consent</h3><p class="cap">Subscriber counts</p><div class="tablewrap"><table><thead><tr><th>List</th><th>Subscribers</th></tr></thead><tbody>`;
+  k.lists.forEach(l=>{ lt+=`<tr><td>${l.name}</td><td>${l.count==null?'—':int(l.count)}</td></tr>`; });
+  lt+=`</tbody></table></div><div class="tnote">Snapshotted daily — this builds a growth trend over time.</div>`;
+  lc.innerHTML=lt; root.appendChild(lc);
+}
+
 const SOURCES={ ads:ADS_CSV, analytics:ANALYTICS_CSV, search:SEARCH_CSV };
 const DATA={}; let anyLive=false, anyErr="";
 
@@ -572,6 +651,10 @@ async function loadAll(){
     if(ADS_ANALYSIS_URL){ const r=await fetch(ADS_ANALYSIS_URL); if(!r.ok) throw 0; ANALYSIS=parseAnalysis(await r.text()); ANALYSIS.live=true; }
     else { ANALYSIS=parseAnalysis(ADS_ANALYSIS_SNAPSHOT); ANALYSIS.live=false; }
   }catch(e){ ANALYSIS=parseAnalysis(ADS_ANALYSIS_SNAPSHOT); ANALYSIS.live=false; }
+  try{
+    if(KLAVIYO_CSV){ const r=await fetch(KLAVIYO_CSV); if(!r.ok) throw 0; KLAVIYO=parseKlaviyo(await r.text()); }
+    else KLAVIYO=parseKlaviyo(KLAVIYO_SNAPSHOT);
+  }catch(e){ KLAVIYO=parseKlaviyo(KLAVIYO_SNAPSHOT); }
   for(const cfg of CONFIGS){
     const url=SOURCES[cfg.key];
     if(url){ try{ const res=await fetch(url); if(!res.ok) throw new Error("HTTP "+res.status);
@@ -590,6 +673,7 @@ function rebuild(window){
     if(wd.length){ if(wd[0].date<minD)minD=wd[0].date; if(wd[wd.length-1].date>maxD)maxD=wd[wd.length-1].date; }
     buildSection(cfg,DATA[cfg.key]||[],window);
   });
+  renderKlaviyoSection(root);
   document.querySelectorAll("#seg button").forEach(b=>b.classList.toggle("active",+b.dataset.w===window));
   if(maxD!=="0") document.getElementById("range").textContent=`${dayLabel(minD)} – ${dayLabel(maxD)} · last ${window} days`;
   const badge=document.getElementById("mode-badge");
