@@ -390,14 +390,20 @@ function renderWoW(root){
 function renderPriorities(root){
   const h=el("div","section-h"); h.innerHTML=`<h2>Priorities</h2><span class="note">Google Ads — from the latest account review</span>`;
   root.appendChild(h);
+  const phoneActions = ANALYSIS && ANALYSIS.conv ? ANALYSIS.conv.filter(c=>c.category==="PHONE_CALL_LEAD") : [];
+  const phoneConv = phoneActions.reduce((s,c)=>s+c.conversions,0);
+  const phoneVal = phoneActions.reduce((s,c)=>s+c.value,0);
+  const phoneHasValue = phoneConv > 0 && phoneVal > 0;
   const wins=[
     "Cost per lead is trending down — account efficiency is improving.",
     "Brand campaign is the most efficient in the account (lowest cost per lead).",
     "Performance Max cost per lead is well below the account's historical average." ];
-  const watch=[
-    {p:"P0",t:"Phone-call leads carry $0 value",d:"Most conversions are phone calls tracked at no value, so ROAS is understated. Assign a value to phone conversions before revenue is headlined."},
+  if(phoneHasValue) wins.push(`Phone-call conversion value is now set (${phoneConv} calls carrying ${money(phoneVal)} in value).`);
+  const watch=[];
+  watch.push(
     {p:"P0",t:"Desktop cost-per-lead well above mobile",d:"Desktop converts far less efficiently. Apply device bid adjustments to cut wasted spend — the fastest efficiency win."},
-    {p:"P1",t:"Auto-Apply recommendations still on",d:"Google is auto-applying changes to the account. Review and disable unwanted automations."} ];
+    {p:"P1",t:"Auto-Apply recommendations still on",d:"Google is auto-applying changes to the account. Review and disable unwanted automations."}
+  );
   const box=el("div","priorities");
   box.innerHTML=`<div class="pcol"><div class="ph win">Wins</div>${wins.map(w=>`<div class="pitem"><span class="pdot"></span><span>${w}</span></div>`).join("")}</div>`
    +`<div class="pcol"><div class="ph watch">Watch-items</div>${watch.map(w=>`<div class="pitem"><span class="pbadge ${w.p.toLowerCase()}">${w.p}</span><span><b>${w.t}.</b> ${w.d}</span></div>`).join("")}</div>`;
@@ -557,15 +563,19 @@ function renderAdsBreakdown(root,a){
   const pConv=a.conv.filter(c=>c.category==="PURCHASE").reduce((s,c)=>s+c.conversions,0);
   const pVal=a.conv.filter(c=>c.category==="PURCHASE").reduce((s,c)=>s+c.value,0);
   const phConv=a.conv.filter(c=>c.category==="PHONE_CALL_LEAD").reduce((s,c)=>s+c.conversions,0);
+  const phVal=a.conv.filter(c=>c.category==="PHONE_CALL_LEAD").reduce((s,c)=>s+c.value,0);
   const totConv=a.total?a.total.conv:(pConv+phConv);
   const phPct=totConv?Math.round(phConv/totConv*100):0;
+  const phoneHasValue=phConv>0&&phVal>0;
   const cv=el("div","card");
   cv.innerHTML=`<h3>Conversions by value</h3><p class="cap">Revenue-generating vs unvalued — last 30 days</p>
     <div class="splitrow"><div class="splitseg" style="flex:${pConv||1}"><span>Valued purchases</span><b>${pConv}</b></div>
-    <div class="splitseg alt" style="flex:${phConv||1}"><span>Phone leads · $0</span><b>${phConv}</b></div></div>
+    <div class="splitseg ${phoneHasValue?'':'alt'}" style="flex:${phConv||1}"><span>Phone leads · ${phoneHasValue?'valued':'$0'}</span><b>${phConv}</b></div></div>
     <div class="convgrid"><div><div class="k">Revenue-generating (valued)</div><div class="v">${pConv} conv · ${money(pVal)}</div></div>
-    <div><div class="k">Phone leads (no value)</div><div class="v">${phConv} conv · $0</div></div></div>
-    <div class="flagbox">⚠ <b>${phConv} of ${totConv} conversions (${phPct}%)</b> are phone calls tracked at <b>$0</b>. Blended ROAS is understated and should not be headlined until phone leads carry a value.</div>`;
+    <div><div class="k">Phone leads ${phoneHasValue?'(valued)':'(no value)'}</div><div class="v">${phConv} conv · ${money(phVal)}</div></div></div>
+    <div class="flagbox">${phoneHasValue
+      ? `✓ <b>Phone-call value is set.</b> ${phConv} of ${totConv} conversions (${phPct}%) are phone calls carrying <b>${money(phVal)}</b> in value.`
+      : `⚠ <b>${phConv} of ${totConv} conversions (${phPct}%)</b> are phone calls tracked at <b>$0</b>. Blended ROAS is understated and should not be headlined until phone leads carry a value.`}</div>`;
   root.appendChild(cv);
 
   // Campaign performance
