@@ -92,6 +92,34 @@
   tbody tr.partial td { color:var(--muted); font-style:italic;}
   .tnote { font-size:11.5px; color:var(--muted); padding:8px 12px 0; }
 
+  .subhead { font-size:12.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); margin:10px 0 8px; }
+  .subhead span { font-weight:400; text-transform:none; letter-spacing:0; }
+  .priorities { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:10px 0 20px; }
+  @media (max-width:760px){ .priorities{ grid-template-columns:1fr; } }
+  .pcol { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px 16px 12px; box-shadow:var(--shadow); }
+  .ph { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px; }
+  .ph.win { color:var(--good); } .ph.watch { color:var(--bad); }
+  .pitem { font-size:13.5px; color:var(--text-secondary); line-height:1.5; padding:8px 0; border-top:1px solid var(--grid); display:flex; gap:8px; align-items:baseline; }
+  .pitem:first-of-type { border-top:none; }
+  .pitem b { color:var(--text-primary); font-weight:600; }
+  .pdot { width:7px;height:7px;border-radius:2px;flex:none;transform:translateY(5px);background:var(--good);}
+  .pbadge { font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:5px; flex:none; color:#fff; }
+  .pbadge.p0{ background:var(--bad); } .pbadge.p1{ background:var(--series-3); color:#000;} .pbadge.p2{ background:var(--muted); }
+  .pending { background:var(--surface); border:1px dashed var(--border); border-radius:14px; padding:16px; margin-bottom:18px;
+    color:var(--muted); font-size:13px; }
+  .pending b { color:var(--text-secondary); }
+  .splitrow{display:flex;gap:2px;height:36px;border-radius:8px;overflow:hidden;margin:6px 0 14px;}
+  .splitseg{display:flex;flex-direction:column;justify-content:center;padding:0 11px;background:var(--series-2);color:#fff;min-width:90px;}
+  .splitseg.alt{background:var(--bad);}
+  .splitseg span{font-size:10.5px;opacity:.92;line-height:1.1;} .splitseg b{font-size:15px;}
+  .convgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0 2px;}
+  .convgrid .k{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;font-weight:600;}
+  .convgrid .v{font-size:16px;font-weight:600;margin-top:2px;}
+  .flagbox{margin-top:13px;padding:10px 12px;border-radius:10px;background:var(--accent-wash);border:1px solid var(--border);font-size:13px;color:var(--text-secondary);line-height:1.5;}
+  .flagbox b{color:var(--text-primary);}
+  .stat{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:5px;}
+  .stat.on{background:rgba(12,163,12,.16);color:var(--good);} .stat.off{background:rgba(137,135,129,.2);color:var(--muted);}
+  .totalrow td{font-weight:700;border-top:1px solid var(--baseline);}
   .status { display:block; font-size:12px; color:var(--muted); margin:20px 0 40px; }
   .tt { position:fixed; pointer-events:none; z-index:30; opacity:0; transition:opacity .08s;
     background:var(--surface); border:1px solid var(--border); border-radius:8px; box-shadow:var(--shadow);
@@ -268,6 +296,26 @@ function buildSection(cfg,full,window){
   });
   root.appendChild(kp);
 
+  // progress-since-baseline strip (live, computed from the data)
+  if(cfg.baseline){
+    const after=full.filter(d=>d.date>=cfg.baseline&&!d.partial);
+    const before=full.filter(d=>d.date<cfg.baseline);
+    if(after.length&&before.length){
+      const bl=dayLabel(cfg.baseline);
+      const cplA=sum(after,"conv")?sum(after,"cost")/sum(after,"conv"):0, cplB=sum(before,"conv")?sum(before,"cost")/sum(before,"conv"):0;
+      const items=[
+        {label:"Conversions",cur:sum(after,"conv"),prev:sum(before,"conv"),fmt:int,goodUp:true},
+        {label:"Cost / conv.",cur:cplA,prev:cplB,fmt:money2,goodUp:false},
+        {label:"Clicks",cur:sum(after,"clicks"),prev:sum(before,"clicks"),fmt:int,goodUp:true},
+        {label:"Spend",cur:sum(after,"cost"),prev:sum(before,"cost"),fmt:money,goodUp:true} ];
+      root.appendChild(el("div","subhead",`Progress since ${bl} <span>— since we changed the account, vs the prior period</span>`));
+      const row=el("div","kpis");
+      items.forEach(t=>{const d=chg(t.cur,t.prev),up=d>=0,good=t.goodUp?up:!up;
+        row.appendChild(el("div","tile",`<div class="label">${t.label}</div><div class="value">${t.fmt(t.cur)}</div><div class="delta ${good?"up":"down"}">${up?"▲":"▼"} ${Math.abs(d).toFixed(0)}% <span class="vs">since ${bl}</span></div>`));});
+      root.appendChild(row);
+    }
+  }
+
   // plain-English analysis
   const a=el("div","analysis"); a.style.borderLeftColor=`var(${cfg.color})`;
   a.innerHTML=`<div class="h">What this means</div><p>${cfg.analyze(cur,prev,window)}</p>`;
@@ -289,21 +337,45 @@ function buildSection(cfg,full,window){
   });
   svgs.forEach(({c,svg})=>lineChart(svg,wd,c.key,`var(${c.color})`,c.fmt,c.unit,!!c.wide));
 
-  const tcard=el("div","card",`<h3>Daily detail</h3><p class="cap">Most recent first</p>`);
-  const tw=el("div","tablewrap");
-  const thead="<tr>"+cfg.columns.map(c=>`<th>${c.label}</th>`).join("")+"</tr>";
-  const shown=[...wd].reverse().slice(0,TABLE_MAX);
-  const tbody=shown.map(d=>`<tr class="${d.partial?"partial":""}">`+
-    cfg.columns.map(c=>`<td>${c.key==="label"?(d.label+(d.partial?" · today":"")):c.fmt(d[c.key])}</td>`).join("")+"</tr>").join("");
-  tw.appendChild(el("table",null,"<thead>"+thead+"</thead><tbody>"+tbody+"</tbody>"));
-  tcard.appendChild(tw);
-  if(wd.length>TABLE_MAX) tcard.appendChild(el("div","tnote",`Showing the most recent ${TABLE_MAX} of ${wd.length} days in view.`));
-  root.appendChild(tcard);
+  // account breakdown (real data from KAs 00-analysis)
+  if(cfg.breakdown && ANALYSIS) renderAdsBreakdown(root,ANALYSIS);
+  // pending scaffold (honest placeholder — no fake data)
+  if(cfg.pending) root.appendChild(el("div","pending",`<b>Coming next:</b> ${cfg.pending}`));
+
+  if(!cfg.hideTable){
+    const tcard=el("div","card",`<h3>Daily detail</h3><p class="cap">Most recent first</p>`);
+    const tw=el("div","tablewrap");
+    const thead="<tr>"+cfg.columns.map(c=>`<th>${c.label}</th>`).join("")+"</tr>";
+    const shown=[...wd].reverse().slice(0,TABLE_MAX);
+    const tbody=shown.map(d=>`<tr class="${d.partial?"partial":""}">`+
+      cfg.columns.map(c=>`<td>${c.key==="label"?(d.label+(d.partial?" · today":"")):c.fmt(d[c.key])}</td>`).join("")+"</tr>").join("");
+    tw.appendChild(el("table",null,"<thead>"+thead+"</thead><tbody>"+tbody+"</tbody>"));
+    tcard.appendChild(tw);
+    if(wd.length>TABLE_MAX) tcard.appendChild(el("div","tnote",`Showing the most recent ${TABLE_MAX} of ${wd.length} days in view.`));
+    root.appendChild(tcard);
+  }
+}
+
+function renderPriorities(root){
+  const h=el("div","section-h"); h.innerHTML=`<h2>Priorities</h2><span class="note">Google Ads — from the latest account review</span>`;
+  root.appendChild(h);
+  const wins=[
+    "Cost per lead is trending down — account efficiency is improving.",
+    "Brand campaign is the most efficient in the account (lowest cost per lead).",
+    "Performance Max cost per lead is well below the account's historical average." ];
+  const watch=[
+    {p:"P0",t:"Phone-call leads carry $0 value",d:"Most conversions are phone calls tracked at no value, so ROAS is understated. Assign a value to phone conversions before revenue is headlined."},
+    {p:"P0",t:"Desktop cost-per-lead well above mobile",d:"Desktop converts far less efficiently. Apply device bid adjustments to cut wasted spend — the fastest efficiency win."},
+    {p:"P1",t:"Auto-Apply recommendations still on",d:"Google is auto-applying changes to the account. Review and disable unwanted automations."} ];
+  const box=el("div","priorities");
+  box.innerHTML=`<div class="pcol"><div class="ph win">Wins</div>${wins.map(w=>`<div class="pitem"><span class="pdot"></span><span>${w}</span></div>`).join("")}</div>`
+   +`<div class="pcol"><div class="ph watch">Watch-items</div>${watch.map(w=>`<div class="pitem"><span class="pbadge ${w.p.toLowerCase()}">${w.p}</span><span><b>${w.t}.</b> ${w.d}</span></div>`).join("")}</div>`;
+  root.appendChild(box);
 }
 
 /* ---- section configs (with analysis writers) ---- */
 const CONFIGS=[
-  { key:"ads", title:"Google Ads", color:"--series-1",
+  { key:"ads", title:"Google Ads", color:"--series-1", baseline:"2026-05-28", hideTable:true, breakdown:true,
     colmap:{clicks:"clicks", conv:"conversions", cpl:"cost / conv", cost:"cost"},
     tiles:[
       {label:"Spend",key:"cost",fmt:money,goodUp:true,val:r=>sum(r,"cost")},
@@ -311,9 +383,8 @@ const CONFIGS=[
       {label:"Cost / conv.",key:"cpl",fmt:money2,goodUp:false,val:r=>{const c=sum(r,"cost"),v=sum(r,"conv");return v?c/v:0;}},
       {label:"Clicks",key:"clicks",fmt:int,goodUp:true,val:r=>sum(r,"clicks")} ],
     charts:[
-      {key:"conv",title:"Conversions / day",cap:"Leads from Google Ads",color:"--series-1",fmt:int,unit:"conversions"},
-      {key:"cpl",title:"Cost per conversion",cap:"Lower is better",color:"--series-4",fmt:v=>"$"+Math.round(v),unit:"CPL"},
-      {key:"cost",title:"Ad spend / day",cap:"Daily Google Ads cost",color:"--series-2",fmt:money,unit:"spend",wide:true} ],
+      {key:"conv",title:"Conversions",cap:"Leads from Google Ads",color:"--series-1",fmt:int,unit:"conversions"},
+      {key:"cpl",title:"Cost per conversion (CPL trend)",cap:"Lower is better — this is coming down",color:"--series-4",fmt:v=>"$"+Math.round(v),unit:"CPL",wide:true} ],
     columns:[ {label:"Date",key:"label"},{label:"Spend",key:"cost",fmt:money},{label:"Clicks",key:"clicks",fmt:int},
               {label:"Conversions",key:"conv",fmt:v=>v.toFixed(0)},{label:"Cost / conv.",key:"cpl",fmt:money2} ],
     analyze:(cur,prev,w)=>{
@@ -375,10 +446,132 @@ const CONFIGS=[
     } },
 ];
 
+/* ---- KAs sbd-google-ads-reports 00-analysis (campaign/device/conversion/change) ---- */
+const ADS_ANALYSIS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRO5FOESHQfGjP6uZhogNMprPhIAfsT9sewDYTsbAjhLE6cUleyBqiVrWa85-6YMuMkqS_I6inNhW1H/pub?gid=386706859&single=true&output=csv";
+const ADS_ANALYSIS_SNAPSHOT = `SBD GOOGLE ADS - ANALYSIS SUMMARY,,,,,,,,
+Generated,2026-07-13 14:51 America/Mexico_City,,,,,,,
+Windows,metrics = LAST_30_DAYS ; change-history = LAST_14_DAYS (cap 10000),,,,,,,
+,,,,,,,,
+CAMPAIGN KPIs (active or has-spend),,,,,,,,
+Campaign,Status,Clicks,Impr,Cost USD,Conv,CPL,CTR %,CVR %
+RT - Smith Bros - Branded (August 2025),PAUSED,145,554,125.56,7,17.94,26.17,4.83
+San Diego - Mobile Detailing v2- 3/27/25,PAUSED,382,6023,2486.81,14,177.63,6.34,3.66
+Brand,ENABLED,107,286,80.4,8,10.05,37.41,7.48
+Search 2026,ENABLED,342,5345,1079.89,12,89.99,6.4,3.51
+Performance Max 2026,ENABLED,163,4253,855.35,9,95.04,3.83,5.52
+ACCOUNT TOTAL,,1139,16461,4628.01,50,92.56,6.92,4.39
+,,,,,,,,
+DEVICE SPLIT,,,,,,,,
+Device,Clicks,Cost USD,Conv,CPL,,,,
+DESKTOP,205,551.65,5,110.33,,,,
+MOBILE,913,4032.73,44,91.65,,,,
+TABLET,20,41.65,1,41.65,,,,
+CONNECTED_TV,1,1.98,0,-,,,,
+,,,,,,,,
+CONVERSION ACTIONS,,,,,,,,
+Action,Category,Conversions,Value,,,,,
+SB Mobile Detailing Website - GA4 (web) purchase,PURCHASE,18,5385.02,,,,,
+RT - Google Ads | Calls From Ad Extension,PHONE_CALL_LEAD,32,0,,,,,
+,,,,,,,,
+CHANGE HISTORY (last 14 days),,,,,,,,
+Total events,3603,,,,,,,
+Date range,2026-06-29 -> 2026-07-10,,,,,,,
+,,,,,,,,
+By user,Count,,,,,,,
+leftlegacy1@gmail.com,3590,,,,,,,
+Recommendations Auto-Apply,13,,,,,,,
+,,,,,,,,
+By change type,Count,,,,,,,
+CAMPAIGN_CRITERION,3450,,,,,,,
+CAMPAIGN_BUDGET,7,,,,,,,
+AD_GROUP,1,,,,,,,
+ASSET,84,,,,,,,
+CAMPAIGN_ASSET,47,,,,,,,
+CUSTOMER_ASSET,8,,,,,,,
+CAMPAIGN,6,,,,,,,`;
+let ANALYSIS=null;
+
+function parseAnalysis(text){
+  const rows=parseCSV(text.trim());
+  const out={generated:"",campaigns:[],total:null,devices:[],conv:[],change:{total:0,autoApply:0,byType:[]}};
+  let mode="";
+  for(const r of rows){
+    const a=(r[0]||"").trim();
+    if(a==="Generated"){ out.generated=(r[1]||"").trim(); continue; }
+    if(a.startsWith("CAMPAIGN KPIs")){mode="camp";continue;}
+    if(a.startsWith("DEVICE SPLIT")){mode="dev";continue;}
+    if(a.startsWith("CONVERSION ACTIONS")){mode="conv";continue;}
+    if(a.startsWith("CHANGE HISTORY")){mode="chg";continue;}
+    if(a==="Campaign"||a==="Device"||a==="Action"||a==="By user"||a==="By change type"){continue;}
+    if(!a){continue;}
+    if(mode==="camp"){
+      if(a==="ACCOUNT TOTAL") out.total={clicks:num(r[2]),impr:num(r[3]),cost:num(r[4]),conv:num(r[5]),cpl:num(r[6]),ctr:num(r[7]),cvr:num(r[8])};
+      else out.campaigns.push({name:a,status:(r[1]||"").trim(),clicks:num(r[2]),impr:num(r[3]),cost:num(r[4]),conv:num(r[5]),cpl:num(r[6]),ctr:num(r[7]),cvr:num(r[8])});
+    } else if(mode==="dev"){ out.devices.push({device:a,clicks:num(r[1]),cost:num(r[2]),conv:num(r[3]),cpl:num(r[4])}); }
+    else if(mode==="conv"){ out.conv.push({action:a,category:(r[1]||"").trim(),conversions:num(r[2]),value:num(r[3])}); }
+    else if(mode==="chg"){
+      if(a==="Total events") out.change.total=num(r[1]);
+      else if(a==="Recommendations Auto-Apply") out.change.autoApply=num(r[1]);
+      else if(/^[A-Z][A-Z_]+$/.test(a) && String(r[1]).trim()!=="") out.change.byType.push({type:a,count:num(r[1])});
+    }
+  }
+  return out;
+}
+
+function renderAdsBreakdown(root,a){
+  const gen=(a.generated||"").split(" ")[0];
+  root.appendChild(el("div","subhead",`Account breakdown — last 30 days <span>${a.live?"· from the account report":`· snapshot ${gen}`}</span>`));
+
+  // Conversions by value
+  const pConv=a.conv.filter(c=>c.category==="PURCHASE").reduce((s,c)=>s+c.conversions,0);
+  const pVal=a.conv.filter(c=>c.category==="PURCHASE").reduce((s,c)=>s+c.value,0);
+  const phConv=a.conv.filter(c=>c.category==="PHONE_CALL_LEAD").reduce((s,c)=>s+c.conversions,0);
+  const totConv=a.total?a.total.conv:(pConv+phConv);
+  const phPct=totConv?Math.round(phConv/totConv*100):0;
+  const cv=el("div","card");
+  cv.innerHTML=`<h3>Conversions by value</h3><p class="cap">Revenue-generating vs unvalued — last 30 days</p>
+    <div class="splitrow"><div class="splitseg" style="flex:${pConv||1}"><span>Valued purchases</span><b>${pConv}</b></div>
+    <div class="splitseg alt" style="flex:${phConv||1}"><span>Phone leads · $0</span><b>${phConv}</b></div></div>
+    <div class="convgrid"><div><div class="k">Revenue-generating (valued)</div><div class="v">${pConv} conv · ${money(pVal)}</div></div>
+    <div><div class="k">Phone leads (no value)</div><div class="v">${phConv} conv · $0</div></div></div>
+    <div class="flagbox">⚠ <b>${phConv} of ${totConv} conversions (${phPct}%)</b> are phone calls tracked at <b>$0</b>. Blended ROAS is understated and should not be headlined until phone leads carry a value.</div>`;
+  root.appendChild(cv);
+
+  // Campaign performance
+  const camps=[...a.campaigns].sort((x,y)=>y.cost-x.cost);
+  let ct=`<h3>Campaign performance</h3><p class="cap">CPL / CTR / CVR side by side — last 30 days</p><div class="tablewrap"><table><thead><tr><th>Campaign</th><th>Status</th><th>Spend</th><th>Conv</th><th>CPL</th><th>CTR</th><th>CVR</th></tr></thead><tbody>`;
+  camps.forEach(c=>{ ct+=`<tr><td>${c.name}</td><td><span class="stat ${c.status==='ENABLED'?'on':'off'}">${c.status||'—'}</span></td><td>${money(c.cost)}</td><td>${c.conv}</td><td>${money2(c.cpl)}</td><td>${c.ctr.toFixed(1)}%</td><td>${c.cvr.toFixed(1)}%</td></tr>`; });
+  if(a.total) ct+=`<tr class="totalrow"><td>Account total</td><td></td><td>${money(a.total.cost)}</td><td>${a.total.conv}</td><td>${money2(a.total.cpl)}</td><td>${a.total.ctr.toFixed(1)}%</td><td>${a.total.cvr.toFixed(1)}%</td></tr>`;
+  ct+=`</tbody></table></div>`;
+  const cc=el("div","card"); cc.innerHTML=ct; root.appendChild(cc);
+
+  // Device split
+  let dt=`<h3>Device split</h3><p class="cap">Cost per lead by device — the fastest efficiency lever</p><div class="tablewrap"><table><thead><tr><th>Device</th><th>Spend</th><th>Conv</th><th>CPL</th></tr></thead><tbody>`;
+  a.devices.filter(d=>d.cost>0).forEach(d=>{ dt+=`<tr><td>${d.device}</td><td>${money(d.cost)}</td><td>${d.conv}</td><td>${d.cpl?money2(d.cpl):'—'}</td></tr>`; });
+  dt+=`</tbody></table></div>`;
+  const desk=a.devices.find(d=>d.device==='DESKTOP'), mob=a.devices.find(d=>d.device==='MOBILE');
+  if(desk&&mob&&mob.cpl) dt+=`<div class="tnote">Desktop CPL is ${(desk.cpl/mob.cpl).toFixed(1)}× mobile (${money2(desk.cpl)} vs ${money2(mob.cpl)}) — device bid adjustments are the quickest efficiency win.</div>`;
+  const dv=el("div","card"); dv.innerHTML=dt; root.appendChild(dv);
+
+  // Change history
+  const topTypes=[...a.change.byType].sort((x,y)=>y.count-x.count).slice(0,3).map(t=>`${t.type.replace(/_/g,' ').toLowerCase()} ${t.count.toLocaleString()}`).join(" · ");
+  const ch=el("div","card");
+  ch.innerHTML=`<h3>Change history</h3><p class="cap">Work on the account — last 14 days</p>
+    <div class="convgrid"><div><div class="k">Total changes</div><div class="v">${a.change.total.toLocaleString()}</div></div>
+    <div><div class="k">Auto-Apply events</div><div class="v">${a.change.autoApply}${a.change.autoApply>0?' · still ON':''}</div></div></div>
+    <div class="tnote">Top change types: ${topTypes}.</div>`;
+  root.appendChild(ch);
+}
+
 const SOURCES={ ads:ADS_CSV, analytics:ANALYTICS_CSV, search:SEARCH_CSV };
 const DATA={}; let anyLive=false, anyErr="";
 
 async function loadAll(){
+  // load KAs account-report analysis (live URL if set, else the embedded snapshot)
+  try{
+    if(ADS_ANALYSIS_URL){ const r=await fetch(ADS_ANALYSIS_URL); if(!r.ok) throw 0; ANALYSIS=parseAnalysis(await r.text()); ANALYSIS.live=true; }
+    else { ANALYSIS=parseAnalysis(ADS_ANALYSIS_SNAPSHOT); ANALYSIS.live=false; }
+  }catch(e){ ANALYSIS=parseAnalysis(ADS_ANALYSIS_SNAPSHOT); ANALYSIS.live=false; }
   for(const cfg of CONFIGS){
     const url=SOURCES[cfg.key];
     if(url){ try{ const res=await fetch(url); if(!res.ok) throw new Error("HTTP "+res.status);
@@ -390,6 +583,7 @@ async function loadAll(){
 
 function rebuild(window){
   const root=document.getElementById("sections"); root.innerHTML="";
+  renderPriorities(root);
   let minD="9999-99-99", maxD="0";
   CONFIGS.forEach(cfg=>{
     const wd=(DATA[cfg.key]||[]).slice(-window);
