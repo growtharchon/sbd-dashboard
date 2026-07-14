@@ -56,6 +56,12 @@
   .section-h .dot { width:10px; height:10px; border-radius:3px; }
   .section-h h2 { font-size:19px; margin:0; letter-spacing:-0.01em; }
   .section-h .note { font-size:12.5px; color:var(--muted); margin-left:auto; }
+  .mini-filter { display:inline-flex; border:1px solid var(--border); border-radius:9px; overflow:hidden; margin-left:2px; }
+  .mini-filter button { font-size:12px; font-weight:600; color:var(--text-secondary); background:transparent;
+    border:none; padding:5px 10px; cursor:pointer; white-space:nowrap; }
+  .mini-filter button+button { border-left:1px solid var(--border); }
+  .mini-filter button.active { background:var(--series-5); color:#fff; }
+  @media (max-width:620px){ .section-h .note { margin-left:0; } .mini-filter { width:100%; } .mini-filter button { flex:1; } }
 
   .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:16px 0 14px; }
   @media (max-width:720px){ .kpis { grid-template-columns:repeat(2,1fr);} }
@@ -83,6 +89,10 @@
   .chart text { font-family:system-ui,sans-serif; }
 
   .tablewrap { overflow-x:auto; }
+  .tablewrap.detail-scroll { max-height:340px; overflow:auto; border:1px solid var(--border); border-radius:10px; }
+  .tablewrap.detail-scroll table { margin:0; }
+  .tablewrap.detail-scroll thead th { position:sticky; top:0; z-index:1; background:var(--surface); }
+  .tablewrap.detail-scroll tbody tr:last-child { border-bottom:none; }
   table { border-collapse:collapse; width:100%; font-size:13px; }
   th,td { text-align:right; padding:9px 12px; white-space:nowrap; font-variant-numeric:tabular-nums; }
   th:first-child,td:first-child { text-align:left; }
@@ -170,6 +180,7 @@ const ANALYTICS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRO5FOESH
 const SEARCH_CSV    = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRO5FOESHQfGjP6uZhogNMprPhIAfsT9sewDYTsbAjhLE6cUleyBqiVrWa85-6YMuMkqS_I6inNhW1H/pub?gid=255381674&single=true&output=csv";
 
 const DEFAULT_WINDOW = 30;
+const REVENUE_WINDOWS = [7,14,30,60,90];
 const TABLE_MAX = 31;
 
 /* ---- Formatters ---- */
@@ -305,6 +316,8 @@ const chg=(c,p)=> p? (c-p)/p*100 : null;
 const deltaLabel=x=>Math.abs(x)<1?"<1%":Math.abs(x).toFixed(0)+"%";
 function arrow(x,goodUp){ if(x===null) return ""; const up=x>=0, good=goodUp?up:!up;
   return ` <span class="${good?"up-txt":"down-txt"}">${up?"up":"down"} ${deltaLabel(x)}</span>`; }
+let currentWindow = DEFAULT_WINDOW;
+let revenueWindow = DEFAULT_WINDOW;
 
 /* ---- build one section for a given window ---- */
 function buildSection(cfg,full,window){
@@ -317,6 +330,14 @@ function buildSection(cfg,full,window){
   const dot=el("span","dot"); dot.style.background=`var(${cfg.color})`; h.appendChild(dot);
   h.appendChild(el("h2",null,cfg.title));
   h.appendChild(el("span","note",`Last ${window} days${prev.length?` vs previous ${window}`:""}`));
+  if(cfg.key==="revenue"){
+    const mf=el("span","mini-filter");
+    REVENUE_WINDOWS.forEach(w=>{
+      const b=el("button",w===revenueWindow?"active":"",String(w)+"d");
+      b.type="button"; b.dataset.revenueWindow=String(w); mf.appendChild(b);
+    });
+    h.appendChild(mf);
+  }
   root.appendChild(h);
 
   if(!full || full.length===0){
@@ -382,15 +403,17 @@ function buildSection(cfg,full,window){
   if(cfg.pending) root.appendChild(el("div","pending",`<b>Coming next:</b> ${cfg.pending}`));
 
   if(!cfg.hideTable){
-    const tcard=el("div","card",`<h3>Daily detail</h3><p class="cap">Most recent first</p>`);
-    const tw=el("div","tablewrap");
+    const tableMax=cfg.tableMax || TABLE_MAX;
+    const isLongTable=wd.length>14;
+    const tcard=el("div","card",`<h3>Daily detail</h3><p class="cap">Most recent first${isLongTable?" · scroll inside the list":""}</p>`);
+    const tw=el("div","tablewrap"+(isLongTable?" detail-scroll":""));
     const thead="<tr>"+cfg.columns.map(c=>`<th>${c.label}</th>`).join("")+"</tr>";
-    const shown=[...wd].reverse().slice(0,TABLE_MAX);
+    const shown=[...wd].reverse().slice(0,tableMax);
     const tbody=shown.map(d=>`<tr class="${d.partial?"partial":""}">`+
       cfg.columns.map(c=>`<td>${c.key==="label"?(d.label+(d.partial?" · today":"")):c.fmt(d[c.key])}</td>`).join("")+"</tr>").join("");
     tw.appendChild(el("table",null,"<thead>"+thead+"</thead><tbody>"+tbody+"</tbody>"));
     tcard.appendChild(tw);
-    if(wd.length>TABLE_MAX) tcard.appendChild(el("div","tnote",`Showing the most recent ${TABLE_MAX} of ${wd.length} days in view.`));
+    if(wd.length>tableMax) tcard.appendChild(el("div","tnote",`Showing the most recent ${tableMax} of ${wd.length} days in view.`));
     root.appendChild(tcard);
   }
 }
@@ -548,6 +571,7 @@ const REVENUE_SNAPSHOT = `"Job Completed On","Total Billed"
 /* ---- section configs (with analysis writers) ---- */
 const CONFIGS=[
   { key:"revenue", title:"Revenue", color:"--series-5",
+    tableMax:90,
     tiles:[
       {label:"Total billed",key:"revenue",fmt:money,goodUp:true,val:r=>sum(r,"revenue")},
       {label:"Avg / day",key:"revenue",fmt:money,goodUp:true,val:r=>avg(r,"revenue")},
@@ -865,16 +889,23 @@ async function loadAll(){
 }
 
 function rebuild(window){
+  currentWindow = window;
   const root=document.getElementById("sections"); root.innerHTML="";
   renderPriorities(root);
   renderWoW(root);
   let minD="9999-99-99", maxD="0";
   CONFIGS.forEach(cfg=>{
-    const wd=(DATA[cfg.key]||[]).slice(-window);
-    if(wd.length){ if(wd[0].date<minD)minD=wd[0].date; if(wd[wd.length-1].date>maxD)maxD=wd[wd.length-1].date; }
-    buildSection(cfg,DATA[cfg.key]||[],window);
+    const activeWindow=cfg.key==="revenue"?revenueWindow:window;
+    const wd=(DATA[cfg.key]||[]).slice(-activeWindow);
+    if(cfg.key!=="revenue" && wd.length){ if(wd[0].date<minD)minD=wd[0].date; if(wd[wd.length-1].date>maxD)maxD=wd[wd.length-1].date; }
+    buildSection(cfg,DATA[cfg.key]||[],activeWindow);
   });
   renderKlaviyoSection(root);
+  document.querySelectorAll("[data-revenue-window]").forEach(b=>b.addEventListener("click",()=>{
+    revenueWindow=+b.dataset.revenueWindow;
+    rebuild(currentWindow);
+    document.getElementById("sec-revenue")?.scrollIntoView({block:"start"});
+  }));
   document.querySelectorAll("#seg button").forEach(b=>b.classList.toggle("active",+b.dataset.w===window));
   if(maxD!=="0") document.getElementById("range").textContent=`${dayLabel(minD)} – ${dayLabel(maxD)} · last ${window} days`;
   const badge=document.getElementById("mode-badge");
