@@ -357,6 +357,36 @@ function buildSection(cfg,full,window){
   }
 }
 
+function renderWoW(root){
+  const items=[
+    {label:"Ad spend", src:"ads", fn:r=>sum(r,"cost"), fmt:money, goodUp:true},
+    {label:"Ads conversions", src:"ads", fn:r=>sum(r,"conv"), fmt:v=>v.toFixed(0), goodUp:true},
+    {label:"Cost / conv.", src:"ads", fn:r=>{const c=sum(r,"cost"),v=sum(r,"conv");return v?c/v:0;}, fmt:money2, goodUp:false},
+    {label:"Website sessions", src:"analytics", fn:r=>sum(r,"sessions"), fmt:int, goodUp:true},
+    {label:"Key events (GA4)", src:"analytics", fn:r=>sum(r,"keyev"), fmt:int, goodUp:true},
+    {label:"Search clicks", src:"search", fn:r=>sum(r,"clicks"), fmt:int, goodUp:true},
+    {label:"Avg position", src:"search", fn:r=>{const w=r.reduce((a,d)=>a+d.position*(d.impr||0),0),im=sum(r,"impr");return im?w/im:0;}, fmt:pos, goodUp:false},
+  ];
+  const complete=k=>(DATA[k]||[]).filter(d=>!d.partial);
+  let body="";
+  items.forEach(m=>{
+    const arr=complete(m.src);
+    if(arr.length<14){ body+=`<tr><td>${m.label}</td><td>—</td><td>—</td><td>—</td></tr>`; return; }
+    const cur=m.fn(arr.slice(-7)), prev=m.fn(arr.slice(-14,-7)), d=chg(cur,prev);
+    const up=d>=0, good=m.goodUp?up:!up;
+    body+=`<tr><td>${m.label}</td><td>${m.fmt(cur)}</td><td>${m.fmt(prev)}</td>`+
+      `<td><span class="${d===null?"":(good?"up-txt":"down-txt")}">${d===null?"—":(up?"▲":"▼")+" "+Math.abs(d).toFixed(0)+"%"}</span></td></tr>`;
+  });
+  const h=el("div","section-h"); h.id="sec-wow"; h.innerHTML=`<h2>Week over week</h2><span class="note">last 7 full days vs the previous 7</span>`;
+  root.appendChild(h);
+  const card=el("div","card");
+  var extra="";
+  if(ANALYSIS && ANALYSIS.change && ANALYSIS.change.total)
+    extra=`<div class="tnote"><b>What we changed:</b> ${ANALYSIS.change.total.toLocaleString()} account changes logged in the last 14 days — see the Google Ads change log below.</div>`;
+  card.innerHTML=`<div class="tablewrap"><table><thead><tr><th>Metric</th><th>This week</th><th>Last week</th><th>Change</th></tr></thead><tbody>${body}</tbody></table></div>${extra}`;
+  root.appendChild(card);
+}
+
 function renderPriorities(root){
   const h=el("div","section-h"); h.innerHTML=`<h2>Priorities</h2><span class="note">Google Ads — from the latest account review</span>`;
   root.appendChild(h);
@@ -667,6 +697,7 @@ async function loadAll(){
 function rebuild(window){
   const root=document.getElementById("sections"); root.innerHTML="";
   renderPriorities(root);
+  renderWoW(root);
   let minD="9999-99-99", maxD="0";
   CONFIGS.forEach(cfg=>{
     const wd=(DATA[cfg.key]||[]).slice(-window);
