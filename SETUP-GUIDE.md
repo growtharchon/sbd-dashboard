@@ -1,6 +1,7 @@
 # SBD Dashboard — Full Setup Guide (Option A: auto-fed, no downloads)
 
-**End state:** one Google Sheet with 3 tabs (`ads`, `analytics`, `search`), each
+**End state:** one Google Sheet with tabs (`ads`, `analytics`, `search`, plus
+optional `fieldd_revenue`), each
 refilled automatically every day by Google's own servers. The dashboard
 (`index.html`, hosted on GitHub Pages) reads the Sheet live. After setup, **you
 never download or export anything again.**
@@ -9,6 +10,7 @@ never download or export anything again.**
 Google Ads ──► ads tab ─────┐
 Google Analytics ► analytics┤─► ONE Google Sheet ──published as CSV──► index.html
 Search Console ─► search tab┘
+Fieldd webhook ─► fieldd_revenue tab
 ```
 
 Work top to bottom. Each part is independent — if one connector isn't ready, the
@@ -117,16 +119,43 @@ others still work.
 
 ---
 
-## PART 3 — Publish the 3 tabs as CSV
+### 2g. Optional: Fieldd webhook → `fieldd_revenue`
 
-For **each** tab (`ads`, `analytics`, `search`):
+Use this if Fieldd's Toolkit has **Webhooks**.
+
+1. In Apps Script, keep using the same `apps-script.gs` file.
+2. Optional but recommended: Project Settings → **Script Properties** → add:
+   - Property: `FIELDD_WEBHOOK_SECRET`
+   - Value: any private random string
+3. Top-right **Deploy** → **New deployment**.
+4. Type: **Web app**.
+5. Execute as: **Me**.
+6. Who has access: **Anyone**.
+7. Deploy, authorize, and copy the Web App URL.
+8. In Fieldd Toolkit → Webhooks, paste the URL.
+   - If you set a secret, use: `WEB_APP_URL?token=YOUR_SECRET`
+9. Choose the closest event to actual revenue:
+   - Best: `payment received`, `invoice paid`, or `job completed`.
+   - Okay for testing: `booking created` or `job updated`.
+10. Send a test webhook. The Sheet should create a new `fieldd_revenue` tab.
+
+The first test stores the full raw payload in the last column, so we can confirm
+Fieldd's exact revenue, status, customer, and attribution field names before
+turning it into dashboard ROAS.
+
+---
+
+## PART 3 — Publish the tabs as CSV
+
+For **each** tab (`ads`, `analytics`, `search`, and `fieldd_revenue` if using Fieldd):
 
 1. **File** → **Share** → **Publish to web**.
 2. In the dialog: left dropdown = the tab (e.g. `ads`); right dropdown =
    **Comma-separated values (.csv)**.
 3. **Publish** → confirm → **copy the link** (ends in `output=csv`).
 
-You now have **3 CSV URLs**. Send them to me — I'll drop them into the dashboard.
+You now have **3 CSV URLs**, or **4** if you also published `fieldd_revenue`.
+Send them to me — I'll drop them into the dashboard.
 
 > These links always return the *current* tab contents, so the dashboard is
 > always live against the latest data.
@@ -159,6 +188,7 @@ You now have **3 CSV URLs**. Send them to me — I'll drop them into the dashboa
 | `ads` | Spend, Clicks, Conversions, Cost/conv. (quarterly) |
 | `analytics` | Sessions, Users, Engaged sessions, Page views, Key events (monthly) |
 | `search` | Clicks, Impressions, CTR, Avg position (monthly) |
+| `fieldd_revenue` | Fieldd webhook events, paid/completed revenue, raw payload |
 
 *(Funnel / CAC / closed-won still needs a CRM or lead sheet — not in any of these
 three Google sources. Tell me where SBD tracks deals if you want that section.)*

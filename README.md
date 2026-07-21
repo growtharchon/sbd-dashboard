@@ -1,12 +1,13 @@
 # SB Mobile Detailing — Marketing Dashboard
 
-A self-updating dashboard for SBD's Google Ads, Google Analytics (GA4), and
-Search Console performance. **Daily data, last 90 days.**
+A self-updating dashboard for SBD's Google Ads, Google Analytics (GA4), Search
+Console, and optional Fieldd revenue performance. **Daily data, last 90 days.**
 
 ```
 Google Ads ──► ads tab ─────┐
 Google Analytics ► analytics┤─► ONE Google Sheet ──published CSV──► index.html
 Search Console ─► search tab┘   (auto-synced daily)     (reads live on load)
+Fieldd webhook ─► fieldd_revenue tab
 ```
 
 ## Status: LIVE ✅
@@ -18,7 +19,8 @@ sample data — browsers block cross-site fetch from `file://`. Host it to see l
 ## Files
 - **index.html** — the dashboard (the only file you host).
 - **google-ads-script.js** — runs in Google Ads, writes the `ads` tab daily.
-- **apps-script.gs** — runs in the Sheet, writes `analytics` + `search` daily.
+- **apps-script.gs** — runs in the Sheet, writes `analytics` + `search` daily,
+  and can receive Fieldd webhooks into `fieldd_revenue`.
 - **SETUP-GUIDE.md** — the full one-time setup walkthrough.
 - **Time_series(...).csv** — original raw export (reference only).
 
@@ -42,6 +44,7 @@ re-upload; the data keeps flowing on its own.
 ## Notes
 - Search Console data always lags ~2–3 days (Google's own delay) — normal.
 - Metrics shown: Ads (spend, conversions, CPL, clicks) · GA4 (sessions, users,
-  engaged, page views, key events) · Search (clicks, impressions, CTR, position).
+  engaged, page views, key events) · Search (clicks, impressions, CTR, position)
+  · optional Fieldd revenue events.
 - Funnel / CAC / closed-won still needs CRM or lead-sheet data — not in any Google
   source. Add that source if you want that section.
