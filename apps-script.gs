@@ -44,10 +44,16 @@ function startDate_() {
   return Utilities.formatDate(d, tz_(), "yyyy-MM-dd");
 }
 function num_(v) { var n = Number(v); return isNaN(n) ? 0 : n; }
-function writeTab_(name, values) {
+function writeTab_(name, values, textCols) {
   var ss = SpreadsheetApp.getActive();
   var sh = ss.getSheetByName(name) || ss.insertSheet(name);
   sh.clearContents();
+  // clearContents() keeps cell formats. A leftover date format (e.g. "yyyy-mm")
+  // makes Sheets re-render "2026-05-18" as "2026-05" in the published CSV, and
+  // the dashboard then drops the row. Force those columns to plain text first.
+  (textCols || []).forEach(function (c) {
+    sh.getRange(1, c, Math.max(values.length, sh.getMaxRows()), 1).setNumberFormat("@");
+  });
   sh.getRange(1, 1, values.length, values[0].length).setValues(values);
 }
 function grid_(rows, w) { return rows.map(function (r) { var a = r.slice(); while (a.length < w) a.push(""); return a; }); }
@@ -232,7 +238,7 @@ function pullGA4() {
     var m = r.metricValues;
     out.push([date, num_(m[0].value), num_(m[1].value), num_(m[2].value), num_(m[3].value), num_(m[4].value)]);
   });
-  writeTab_(GA4_TAB, out);
+  writeTab_(GA4_TAB, out, [1]);
   Logger.log("GA4: wrote " + (out.length - 1) + " days.");
 }
 
@@ -265,6 +271,6 @@ function pullSearchConsole() {
     out.push([date, Math.round(row.clicks), Math.round(row.impressions),
               Math.round(ctr * 100) / 100, Math.round(row.position * 10) / 10]);
   });
-  writeTab_(GSC_TAB, out);
+  writeTab_(GSC_TAB, out, [1]);
   Logger.log("Search Console: wrote " + (out.length - 1) + " days.");
 }

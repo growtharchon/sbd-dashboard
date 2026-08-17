@@ -27,9 +27,14 @@ function main() {
 function round2(n) { return Math.round(n * 100) / 100; }
 function ss_()     { return SpreadsheetApp.openByUrl(SHEET_URL); }
 function tab_(name){ return ss_().getSheetByName(name) || ss_().insertSheet(name); }
-function writeGrid_(name, rows, width) {
+function writeGrid_(name, rows, width, textCols) {
   var norm = rows.map(function (r) { var a = r.slice(); while (a.length < width) a.push(""); return a; });
   var sh = tab_(name); sh.clearContents();
+  // clearContents() keeps cell formats, so a stray date format can re-render
+  // "2026-05-18" as "2026-05" in the published CSV. Force those cols to text.
+  (textCols || []).forEach(function (c) {
+    sh.getRange(1, c, Math.max(norm.length, sh.getMaxRows()), 1).setNumberFormat("@");
+  });
   sh.getRange(1, 1, norm.length, width).setValues(norm);
 }
 
@@ -54,7 +59,7 @@ function writeDailyTab() {
     var cost = (parseInt(r["metrics.cost_micros"], 10) || 0) / 1e6;
     out.push([date, clicks, round2(conv), round2(conv ? cost / conv : 0), round2(cost)]);
   }
-  writeGrid_(DAILY_TAB, out, 5);
+  writeGrid_(DAILY_TAB, out, 5, [1]);
   Logger.log("Wrote " + (out.length - 1) + " days to '" + DAILY_TAB + "'.");
 }
 
