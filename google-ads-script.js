@@ -27,15 +27,17 @@ function main() {
 function round2(n) { return Math.round(n * 100) / 100; }
 function ss_()     { return SpreadsheetApp.openByUrl(SHEET_URL); }
 function tab_(name){ return ss_().getSheetByName(name) || ss_().insertSheet(name); }
-function writeGrid_(name, rows, width, textCols) {
+function writeGrid_(name, rows, width, dateCols) {
   var norm = rows.map(function (r) { var a = r.slice(); while (a.length < width) a.push(""); return a; });
   var sh = tab_(name); sh.clearContents();
-  // clearContents() keeps cell formats, so a stray date format can re-render
-  // "2026-05-18" as "2026-05" in the published CSV. Force those cols to text.
-  (textCols || []).forEach(function (c) {
-    sh.getRange(1, c, Math.max(norm.length, sh.getMaxRows()), 1).setNumberFormat("@");
-  });
   sh.getRange(1, 1, norm.length, width).setValues(norm);
+  // clearContents() keeps cell formats, so a stray "yyyy-mm" re-renders
+  // "2026-05-18" as "2026-05" in the published CSV. Pin the display format
+  // AFTER writing so it wins however Sheets stored the value.
+  (dateCols || []).forEach(function (c) {
+    sh.getRange(2, c, Math.max(norm.length - 1, 1), 1).setNumberFormat("yyyy-mm-dd");
+  });
+  SpreadsheetApp.flush();
 }
 
 /* ── daily time series → "ads" ────────────────────────────────────────────── */

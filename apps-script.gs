@@ -44,17 +44,19 @@ function startDate_() {
   return Utilities.formatDate(d, tz_(), "yyyy-MM-dd");
 }
 function num_(v) { var n = Number(v); return isNaN(n) ? 0 : n; }
-function writeTab_(name, values, textCols) {
+function writeTab_(name, values, dateCols) {
   var ss = SpreadsheetApp.getActive();
   var sh = ss.getSheetByName(name) || ss.insertSheet(name);
   sh.clearContents();
-  // clearContents() keeps cell formats. A leftover date format (e.g. "yyyy-mm")
-  // makes Sheets re-render "2026-05-18" as "2026-05" in the published CSV, and
-  // the dashboard then drops the row. Force those columns to plain text first.
-  (textCols || []).forEach(function (c) {
-    sh.getRange(1, c, Math.max(values.length, sh.getMaxRows()), 1).setNumberFormat("@");
-  });
   sh.getRange(1, 1, values.length, values[0].length).setValues(values);
+  // clearContents() keeps cell formats, and Sheets coerces "2026-05-19" into a
+  // date value rendered with whatever format the cell already had — a stale
+  // "yyyy-mm" published as "2026-05" and the dashboard dropped the row. Pin the
+  // display format AFTER writing so it wins however the value landed.
+  (dateCols || []).forEach(function (c) {
+    sh.getRange(2, c, Math.max(values.length - 1, 1), 1).setNumberFormat("yyyy-mm-dd");
+  });
+  SpreadsheetApp.flush();
 }
 function grid_(rows, w) { return rows.map(function (r) { var a = r.slice(); while (a.length < w) a.push(""); return a; }); }
 function r2_(n) { return Math.round(n * 100) / 100; }
