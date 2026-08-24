@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SBD 90-Day Trend — Revenue &amp; Ads</title>
+<meta name="description" content="Ninety days of Smith Bros Mobile Detailing billed revenue set against Google Ads spend and conversions, 26 May to 23 August 2026.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230891b2'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 10' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+</head>
+<body>
+<style>
+:root{
+  color-scheme: light;
+  --ground:#edf1f3;
+  --card:#ffffff;
+  --card-2:#f6f8f9;
+  --line:#d3dbe0;
+  --line-soft:#e4eaee;
+  --ink:#101a20;
+  --ink-2:#54646f;
+  --ink-3:#7d8d97;
+  --rev:#0891b2;
+  --rev-soft:rgba(8,145,178,0.13);
+  --ads:#b45309;
+  --ads-soft:rgba(180,83,9,0.13);
+  --good:#15803d;
+  --good-soft:rgba(21,128,61,0.11);
+  --bad:#b4291f;
+  --bad-soft:rgba(180,41,31,0.10);
+  --shadow:0 1px 2px rgba(16,26,32,.05), 0 6px 22px rgba(16,26,32,.06);
+  --radius:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --ground:#14181b;
+    --card:#1b2025;
+    --card-2:#20262c;
+    --line:#333c44;
+    --line-soft:#272f36;
+    --ink:#eef3f6;
+    --ink-2:#a3b1bc;
+    --ink-3:#7d8d97;
+    --rev:#0fa2c7;
+    --rev-soft:rgba(15,162,199,0.16);
+    --ads:#d07e30;
+    --ads-soft:rgba(208,126,48,0.16);
+    --good:#4fa96a;
+    --good-soft:rgba(79,169,106,0.14);
+    --bad:#e0705f;
+    --bad-soft:rgba(224,112,95,0.13);
+    --shadow:0 1px 2px rgba(0,0,0,.32), 0 6px 22px rgba(0,0,0,.30);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --ground:#14181b;
+  --card:#1b2025;
+  --card-2:#20262c;
+  --line:#333c44;
+  --line-soft:#272f36;
+  --ink:#eef3f6;
+  --ink-2:#a3b1bc;
+  --ink-3:#7d8d97;
+  --rev:#0fa2c7;
+  --rev-soft:rgba(15,162,199,0.16);
+  --ads:#d07e30;
+  --ads-soft:rgba(208,126,48,0.16);
+  --good:#4fa96a;
+  --good-soft:rgba(79,169,106,0.14);
+  --bad:#e0705f;
+  --bad-soft:rgba(224,112,95,0.13);
+  --shadow:0 1px 2px rgba(0,0,0,.32), 0 6px 22px rgba(0,0,0,.30);
+}
+
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--ground);
+  color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1060px;margin:0 auto;padding:0 22px 72px;}
+
+.eyebrow{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-size:11.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-3);
+}
+h1{
+  font-family:Archivo,system-ui,sans-serif;font-weight:700;
+  font-size:clamp(30px,4.6vw,46px);line-height:1.06;letter-spacing:-.022em;
+  margin:.28em 0 0;text-wrap:balance;
+}
+h2{
+  font-family:Archivo,system-ui,sans-serif;font-weight:700;
+  font-size:20px;letter-spacing:-.012em;margin:0;text-wrap:balance;
+}
+h3{
+  font-family:Archivo,system-ui,sans-serif;font-weight:600;
+  font-size:15.5px;letter-spacing:-.008em;margin:0;
+}
+p{margin:0;max-width:68ch;}
+a{color:var(--rev);text-underline-offset:3px;}
+a:focus-visible,button:focus-visible{outline:2px solid var(--rev);outline-offset:3px;border-radius:4px;}
+
+header.page{padding:46px 0 8px;border-bottom:1px solid var(--line);margin-bottom:26px;}
+.lede{color:var(--ink-2);font-size:17px;margin-top:14px;max-width:64ch;}
+.stamp{
+  font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-3);
+  margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+}
+.stamp span.sep{opacity:.45;}
+
+/* resolved notice */
+.notice{
+  display:flex;gap:14px;align-items:flex-start;
+  background:var(--card);border:1px solid var(--line);
+  border-left:3px solid var(--good);
+  border-radius:var(--radius);padding:15px 18px;box-shadow:var(--shadow);
+  margin-bottom:26px;
+}
+.notice .mark{
+  flex:none;width:22px;height:22px;border-radius:50%;
+  background:var(--good-soft);color:var(--good);
+  display:grid;place-items:center;font-size:13px;font-weight:700;margin-top:2px;
+}
+.notice .body{font-size:14.5px;color:var(--ink-2);}
+.notice .body b{color:var(--ink);font-weight:600;}
+.notice .body .t{
+  display:block;font-family:Archivo,sans-serif;font-weight:600;font-size:14.5px;
+  color:var(--ink);margin-bottom:2px;letter-spacing:-.005em;
+}
+
+/* stat row */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:34px;}
+@media (max-width:820px){.stats{grid-template-columns:repeat(2,1fr);}}
+@media (max-width:430px){.stats{grid-template-columns:1fr;}}
+.stat{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:16px 17px 15px;box-shadow:var(--shadow);
+  display:flex;flex-direction:column;gap:5px;
+}
+.stat .k{
+  font-family:"IBM Plex Mono",monospace;font-size:10.5px;font-weight:600;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);
+}
+.stat .v{
+  font-family:Archivo,sans-serif;font-weight:700;font-size:27px;letter-spacing:-.025em;
+  line-height:1.08;font-variant-numeric:tabular-nums;
+}
+.stat .n{font-size:12.5px;color:var(--ink-2);line-height:1.4;}
+.stat.rev .v{color:var(--rev);}
+.stat.ads .v{color:var(--ads);}
+
+/* sections */
+section{margin-bottom:40px;}
+.shead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:6px;}
+.swatch{width:9px;height:9px;border-radius:2px;flex:none;transform:translateY(-1px);}
+.shead .note{
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink-3);
+  margin-left:auto;letter-spacing:.04em;
+}
+@media (max-width:620px){.shead .note{margin-left:0;width:100%;}}
+.sintro{color:var(--ink-2);font-size:15px;margin:8px 0 16px;}
+
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 18px 12px;box-shadow:var(--shadow);
+}
+.card .ctitle{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:2px;}
+.card .cap{font-size:12.5px;color:var(--ink-3);margin:0 0 10px;}
+
+/* legend */
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-left:auto;}
+@media (max-width:620px){.legend{margin-left:0;}}
+.lg{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink-2);}
+.lg .key{width:16px;height:0;border-top-width:2px;border-top-style:solid;flex:none;}
+.lg .key.thin{border-top-width:1.5px;opacity:.42;}
+.lg .key.block{height:11px;width:11px;border-radius:3px;border:none;}
+
+.chart{width:100%;height:auto;display:block;overflow:visible;touch-action:pan-y;}
+.chart text{font-family:"IBM Plex Mono",ui-monospace,monospace;}
+.gridline{stroke:var(--line-soft);stroke-width:1;}
+.axis{stroke:var(--line);stroke-width:1;}
+.tick{font-size:10.5px;fill:var(--ink-3);}
+
+.tip{
+  position:fixed;z-index:60;pointer-events:none;opacity:0;
+  transform:translate(-50%,calc(-100% - 12px));
+  transition:opacity .09s ease;
+  background:var(--card);border:1px solid var(--line);border-radius:10px;
+  box-shadow:var(--shadow);padding:9px 11px;min-width:132px;
+}
+.tip .d{
+  font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.05em;
+  color:var(--ink-3);text-transform:uppercase;margin-bottom:5px;
+}
+.tip .r{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-2);white-space:nowrap;}
+.tip .r+.r{margin-top:3px;}
+.tip .r .sw{width:9px;height:9px;border-radius:2px;flex:none;}
+.tip .r b{margin-left:auto;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums;}
+
+.prose{margin-top:16px;display:flex;flex-direction:column;gap:12px;}
+.prose p{font-size:15px;color:var(--ink-2);}
+.prose b{color:var(--ink);font-weight:600;}
+.up{color:var(--good);font-weight:600;}
+.down{color:var(--bad);font-weight:600;}
+
+/* table */
+.tablewrap{overflow-x:auto;margin-top:2px;}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:560px;}
+caption{text-align:left;font-size:12.5px;color:var(--ink-3);padding:0 0 10px;}
+th,td{
+  text-align:right;padding:10px 14px;white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+th:first-child,td:first-child{text-align:left;}
+thead th{
+  font-family:"IBM Plex Mono",monospace;font-size:10.5px;font-weight:600;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);
+  border-bottom:1px solid var(--line);vertical-align:bottom;
+}
+thead th .sub{display:block;font-size:10px;letter-spacing:.04em;opacity:.75;text-transform:none;margin-top:2px;}
+tbody tr+tr{border-top:1px solid var(--line-soft);}
+tbody td:first-child{color:var(--ink);font-weight:500;}
+tbody tr.rev-row td:not(:first-child){color:var(--rev);font-weight:600;}
+tbody tr.ads-row td:not(:first-child){color:var(--ads);font-weight:600;}
+.blk{background:var(--card-2);}
+
+.takeaways{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media (max-width:760px){.takeaways{grid-template-columns:1fr;}}
+.tk{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:16px 18px;box-shadow:var(--shadow);
+}
+.tk .h{
+  font-family:"IBM Plex Mono",monospace;font-size:10.5px;font-weight:600;
+  letter-spacing:.11em;text-transform:uppercase;margin-bottom:10px;
+}
+.tk.good .h{color:var(--good);}
+.tk.watch .h{color:var(--bad);}
+.tk ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;}
+.tk li{display:flex;gap:10px;font-size:14px;color:var(--ink-2);line-height:1.5;}
+.tk li .dot{width:6px;height:6px;border-radius:2px;flex:none;margin-top:8px;}
+.tk.good li .dot{background:var(--good);}
+.tk.watch li .dot{background:var(--bad);}
+.tk li b{color:var(--ink);font-weight:600;}
+
+footer.page{
+  border-top:1px solid var(--line);padding-top:20px;margin-top:44px;
+  font-size:13px;color:var(--ink-3);display:flex;flex-direction:column;gap:7px;
+}
+footer.page .row{display:flex;gap:9px;flex-wrap:wrap;align-items:center;}
+
+@media (prefers-reduced-motion:no-preference){
+  .fade{animation:rise .5s cubic-bezier(.22,.61,.36,1) both;}
+  @keyframes rise{from{opacity:0;transform:translateY(9px);}to{opacity:1;transform:none;}}
+}
+</style>
+
+<div class="wrap">
+
+<header class="page fade">
+  <div class="eyebrow">Smith Bros Mobile Detailing</div>
+  <h1>90 days of revenue and ads</h1>
+  <p class="lede">Billed revenue from completed Fieldd jobs set against Google Ads spend and conversions, day by day, for the three months ending 23 August 2026.</p>
+  <div class="stamp">
+    <span>Window 26 May &ndash; 23 Aug 2026</span><span class="sep">/</span>
+    <span>90 days</span><span class="sep">/</span>
+    <span>Compiled 24 Aug 2026</span>
+  </div>
+</header>
+
+<div class="notice fade">
+  <div class="mark" aria-hidden="true">&check;</div>
+  <div class="body">
+    <span class="t">Conversion tracking was fixed today</span>
+    Google Ads stopped recording conversions around <b>13 August</b> and the fix went in <b>today, 24 August</b>. Revenue was never affected, but every Ads figure covering 13&ndash;23 August understates conversions and overstates cost per lead. <b>Read August's ad metrics with that in mind</b>; the revenue side of this page is unaffected.
+  </div>
+</div>
+
+<div class="stats fade">
+  <div class="stat rev">
+    <div class="k">Billed revenue</div>
+    <div class="v" id="s-rev"></div>
+    <div class="n">90 days, <span id="s-revday"></span> per day</div>
+  </div>
+  <div class="stat ads">
+    <div class="k">Ad spend</div>
+    <div class="v" id="s-cost"></div>
+    <div class="n">90 days, <span id="s-costday"></span> per day</div>
+  </div>
+  <div class="stat">
+    <div class="k">Cost per lead</div>
+    <div class="v" id="s-cpl"></div>
+    <div class="n"><span id="s-conv"></span> conversions recorded</div>
+  </div>
+  <div class="stat">
+    <div class="k">Revenue per ad $</div>
+    <div class="v" id="s-mult"></div>
+    <div class="n">Blended across the business, not attributed</div>
+  </div>
+</div>
+
+<section class="fade">
+  <div class="shead">
+    <span class="swatch" style="background:var(--rev)"></span>
+    <h2>Revenue holds a flat line</h2>
+    <span class="note">Fieldd, completed jobs</span>
+  </div>
+  <p class="sintro">The clearest finding on this page: across three months the daily rhythm barely moves.</p>
+  <div class="card">
+    <div class="ctitle">
+      <h3>Billed revenue per day</h3>
+      <div class="legend">
+        <span class="lg"><span class="key thin" style="border-top-color:var(--rev)"></span>Daily</span>
+        <span class="lg"><span class="key" style="border-top-color:var(--rev)"></span>7-day average</span>
+      </div>
+    </div>
+    <p class="cap">Thin line is each day as billed; the heavier line is the trailing 7-day average, which is what the trend actually looks like.</p>
+    <svg class="chart" id="c-rev" viewBox="0 0 1000 300" role="img" aria-label="Daily billed revenue over 90 days with a 7-day trailing average, moving sideways between roughly 5,300 and 6,900 dollars per day."></svg>
+  </div>
+  <div class="prose">
+    <p>Over the 90 days SBD billed <b id="p-rev"></b>, an average of <b id="p-revday"></b> a day. Cut into three equal months the totals are <b>$181,384</b>, then <b>$185,443</b>, then <b>$180,257</b>. That is a spread of under 3% across a quarter, so this is a stable base rather than a business trending in either direction.</p>
+    <p>The visible spikes are single large jobs, not shifts in demand. <b>18 August billed $17,071</b>, the biggest day in the record and roughly 2.8&times; a normal day. Underneath those spikes the 7-day average has stayed inside a narrow band all quarter, and weekly totals have run between <b>$39k and $47k</b> without exception.</p>
+    <p>The most recent full week, 17 to 23 August, came in at <b>$46,691</b>, <span class="up">the strongest week of the 90 days</span> and up 12% on the week before it. August closed the 23rd at <b>$139,501</b>, pacing to roughly <b>$188k</b> against July's $186,805.</p>
+  </div>
+</section>
+
+<section class="fade">
+  <div class="shead">
+    <span class="swatch" style="background:var(--ads)"></span>
+    <h2>Ad spend stepped up in August</h2>
+    <span class="note">Google Ads, daily</span>
+  </div>
+  <p class="sintro">Spend ran flat for two months, then rose in the final block.</p>
+  <div class="card">
+    <div class="ctitle">
+      <h3>Ad spend per day</h3>
+      <div class="legend">
+        <span class="lg"><span class="key thin" style="border-top-color:var(--ads)"></span>Daily</span>
+        <span class="lg"><span class="key" style="border-top-color:var(--ads)"></span>7-day average</span>
+      </div>
+    </div>
+    <p class="cap">Daily cost with its trailing 7-day average. Note the two spikes on 20 and 21 August.</p>
+    <svg class="chart" id="c-cost" viewBox="0 0 1000 300" role="img" aria-label="Daily Google Ads spend over 90 days with a 7-day trailing average, sitting near 155 dollars a day before rising in August with spikes above 400 dollars on 20 and 21 August."></svg>
+  </div>
+  <div class="prose">
+    <p>Total spend across the window was <b id="p-cost"></b>, about <b id="p-costday"></b> a day. The first two 30-day blocks were level at <b>$4,760</b> and <b>$4,616</b>; the last block rose to <b>$5,398</b>, a 17% increase on the block before it.</p>
+    <p>Most of that increase sits in a handful of days. <b>20 and 21 August ran $415 and $410</b> against a norm nearer $160. That is worth confirming as deliberate, because it landed inside the same stretch where conversion recording had stopped, which makes those days look far worse than they probably were.</p>
+  </div>
+</section>
+
+<section class="fade">
+  <div class="shead">
+    <span class="swatch" style="background:var(--ads)"></span>
+    <h2>The conversion gap, and what it did to August</h2>
+    <span class="note">Now fixed</span>
+  </div>
+  <p class="sintro">This is the one chart that needs reading with the tracking fix in mind.</p>
+  <div class="card">
+    <div class="ctitle">
+      <h3>Conversions recorded per day</h3>
+      <div class="legend">
+        <span class="lg"><span class="key block" style="background:var(--ads)"></span>Conversions</span>
+        <span class="lg"><span class="key block" style="background:var(--bad-soft);box-shadow:inset 0 0 0 1px var(--bad)"></span>Tracking gap</span>
+      </div>
+    </div>
+    <p class="cap">Daily conversions as recorded in Google Ads. The shaded band is 13 to 23 August, when the tracking was broken.</p>
+    <svg class="chart" id="c-conv" viewBox="0 0 1000 300" role="img" aria-label="Daily Google Ads conversions over 90 days, typically one to four a day, collapsing to almost zero across the shaded 13 to 23 August tracking gap."></svg>
+  </div>
+  <div class="prose">
+    <p>Split August at the 13th and the break is unmistakable. <b>1 to 12 August: 359 clicks and 25 conversions</b>, a 6.96% conversion rate, the best stretch in the whole 90 days. <b>13 to 23 August: 372 clicks and 4 conversions</b>, a rate of 1.08%. Eight of those eleven days recorded nothing at all.</p>
+    <p>Clicks held steady and spend actually rose, so traffic never went anywhere. Revenue over that same stretch was the strongest of the quarter, and the record $17,071 day on 18 August is a day Google Ads logged <b>zero</b> conversions. Jobs were being booked and billed the entire time; only the recording stopped.</p>
+    <p>The practical effect is that August's cost per lead reads <b>$149.07</b> and the 13&ndash;23 August window reads <b class="down">$605.60</b>. Neither is a real number. July's <b>$88.33</b> and the <b>$76.02</b> from the first twelve days of August are the honest recent picture, and both are better than where the account started the quarter.</p>
+  </div>
+</section>
+
+<section class="fade">
+  <div class="shead">
+    <span class="swatch" style="background:var(--ink-3)"></span>
+    <h2>Three months, side by side</h2>
+    <span class="note">30 days each</span>
+  </div>
+  <p class="sintro">The same 90 days cut into three equal blocks, so the direction of travel is visible without the daily noise.</p>
+  <div class="card">
+    <div class="tablewrap">
+      <table>
+        <caption>Every figure covers exactly 30 days. The third block contains the tracking gap, so its conversions and cost per lead are understated.</caption>
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Block 1<span class="sub">26 May &ndash; 24 Jun</span></th>
+            <th>Block 2<span class="sub">25 Jun &ndash; 24 Jul</span></th>
+            <th>Block 3<span class="sub">25 Jul &ndash; 23 Aug</span></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="fade">
+  <div class="shead">
+    <span class="swatch" style="background:var(--good)"></span>
+    <h2>What to take from it</h2>
+  </div>
+  <div class="takeaways">
+    <div class="tk good">
+      <div class="h">Working</div>
+      <ul>
+        <li><span class="dot"></span><span><b>Revenue is dependable.</b> Three months inside a 3% spread, and the most recent week was the best of the quarter.</span></li>
+        <li><span class="dot"></span><span><b>Cost per lead genuinely improved.</b> $132.22 in the first block to $90.51 in the second, a 32% gain before tracking muddied the third.</span></li>
+        <li><span class="dot"></span><span><b>Brand is the efficient campaign</b> at roughly $13 a lead over the last 30 days, against $134 for Performance Max and $243 for Search.</span></li>
+        <li><span class="dot"></span><span><b>Two old flags are closed.</b> Auto-Apply is off, and phone calls now carry a value instead of counting as $0.</span></li>
+      </ul>
+    </div>
+    <div class="tk watch">
+      <div class="h">Watching</div>
+      <ul>
+        <li><span class="dot"></span><span><b>August's ad metrics are unreliable</b> until the fixed tracking has run a clean fortnight. Do not read the CPL spike as performance.</span></li>
+        <li><span class="dot"></span><span><b>Search 2026 is the expensive campaign</b> at $243 a lead on $2,675 of spend, the largest single line in the account.</span></li>
+        <li><span class="dot"></span><span><b>Spend doubled on 20 and 21 August.</b> Confirm that was intentional.</span></li>
+        <li><span class="dot"></span><span><b>Desktop still costs more than mobile</b>, $152.29 against $119.92 per lead.</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer class="page">
+  <div class="row"><span>Revenue: Fieldd completed-job export, billed on the date the job completed.</span></div>
+  <div class="row"><span>Ads: Google Ads daily export via the account script. Search Console and GA4 are not included here.</span></div>
+  <div class="row"><span>Blended revenue per ad dollar covers all revenue against all ad spend. It is not an attributed ROAS and should not be quoted as one.</span></div>
+  <div class="row"><span>Full dashboard:</span> <a href="https://growtharchon.github.io/sbd-dashboard/">growtharchon.github.io/sbd-dashboard</a></div>
+</footer>
+
+</div>
+
+<div class="tip" id="tip" role="status" aria-live="polite"></div>
+
+<script>
+const D = {"series":[{"d":"2026-05-26","rev":9062.58,"cost":174.61,"conv":1.0,"clicks":32.0,"revAvg":9062.58,"costAvg":174.61},{"d":"2026-05-27","rev":7420.56,"cost":154.15,"conv":1.0,"clicks":32.0,"revAvg":8241.57,"costAvg":164.38},{"d":"2026-05-28","rev":4499.5,"cost":139.75,"conv":1.0,"clicks":29.0,"revAvg":6994.21,"costAvg":156.17},{"d":"2026-05-29","rev":9377.89,"cost":129.88,"conv":0.0,"clicks":28.0,"revAvg":7590.13,"costAvg":149.6},{"d":"2026-05-30","rev":5527.59,"cost":113.47,"conv":0.0,"clicks":26.0,"revAvg":7177.62,"costAvg":142.37},{"d":"2026-05-31","rev":5364.55,"cost":149.36,"conv":0.0,"clicks":31.0,"revAvg":6875.44,"costAvg":143.54},{"d":"2026-06-01","rev":6816.81,"cost":153.74,"conv":0.0,"clicks":37.0,"revAvg":6867.07,"costAvg":144.99},{"d":"2026-06-02","rev":7154.34,"cost":100.24,"conv":0.0,"clicks":19.0,"revAvg":6594.46,"costAvg":134.37},{"d":"2026-06-03","rev":5769.13,"cost":66.51,"conv":0.0,"clicks":25.0,"revAvg":6358.54,"costAvg":121.85},{"d":"2026-06-04","rev":6387.17,"cost":158.07,"conv":2.0,"clicks":27.0,"revAvg":6628.21,"costAvg":124.47},{"d":"2026-06-05","rev":7975.41,"cost":303.79,"conv":4.0,"clicks":49.0,"revAvg":6427.86,"costAvg":149.31},{"d":"2026-06-06","rev":4131.04,"cost":232.17,"conv":2.0,"clicks":38.0,"revAvg":6228.35,"costAvg":166.27},{"d":"2026-06-07","rev":4934.08,"cost":165.28,"conv":1.0,"clicks":32.0,"revAvg":6166.85,"costAvg":168.54},{"d":"2026-06-08","rev":5777.05,"cost":136.28,"conv":1.0,"clicks":24.0,"revAvg":6018.32,"costAvg":166.05},{"d":"2026-06-09","rev":6151.3,"cost":170.62,"conv":1.0,"clicks":23.0,"revAvg":5875.03,"costAvg":176.1},{"d":"2026-06-10","rev":5213.8,"cost":151.2,"conv":6.0,"clicks":34.0,"revAvg":5795.69,"costAvg":188.2},{"d":"2026-06-11","rev":6729.87,"cost":157.22,"conv":0.0,"clicks":23.0,"revAvg":5844.65,"costAvg":188.08},{"d":"2026-06-12","rev":5547.19,"cost":163.92,"conv":2.0,"clicks":28.0,"revAvg":5497.76,"costAvg":168.1},{"d":"2026-06-13","rev":5250.59,"cost":200.79,"conv":0.0,"clicks":22.0,"revAvg":5657.7,"costAvg":163.62},{"d":"2026-06-14","rev":4596.59,"cost":66.11,"conv":0.0,"clicks":20.0,"revAvg":5609.48,"costAvg":149.45},{"d":"2026-06-15","rev":6133.05,"cost":218.91,"conv":1.0,"clicks":39.0,"revAvg":5660.34,"costAvg":161.25},{"d":"2026-06-16","rev":8137.53,"cost":213.01,"conv":3.0,"clicks":35.0,"revAvg":5944.09,"costAvg":167.31},{"d":"2026-06-17","rev":4910.6,"cost":139.32,"conv":1.0,"clicks":28.0,"revAvg":5900.77,"costAvg":165.61},{"d":"2026-06-18","rev":7443.91,"cost":164.04,"conv":3.0,"clicks":31.0,"revAvg":6002.78,"costAvg":166.59},{"d":"2026-06-19","rev":5018.6,"cost":146.21,"conv":1.0,"clicks":40.0,"revAvg":5927.27,"costAvg":164.06},{"d":"2026-06-20","rev":5182.5,"cost":124.41,"conv":2.0,"clicks":25.0,"revAvg":5917.54,"costAvg":153.14},{"d":"2026-06-21","rev":5462.01,"cost":158.16,"conv":0.0,"clicks":31.0,"revAvg":6041.17,"costAvg":166.29},{"d":"2026-06-22","rev":4700.2,"cost":177.68,"conv":0.0,"clicks":40.0,"revAvg":5836.48,"costAvg":160.4},{"d":"2026-06-23","rev":4493.0,"cost":168.53,"conv":1.0,"clicks":28.0,"revAvg":5315.83,"costAvg":154.05},{"d":"2026-06-24","rev":6216.06,"cost":162.33,"conv":2.0,"clicks":37.0,"revAvg":5502.33,"costAvg":157.34},{"d":"2026-06-25","rev":5391.6,"cost":142.85,"conv":2.0,"clicks":29.0,"revAvg":5209.14,"costAvg":154.31},{"d":"2026-06-26","rev":9529.05,"cost":59.84,"conv":0.0,"clicks":24.0,"revAvg":5853.49,"costAvg":141.97},{"d":"2026-06-27","rev":6064.28,"cost":181.46,"conv":4.0,"clicks":45.0,"revAvg":5979.46,"costAvg":150.12},{"d":"2026-06-28","rev":5359.31,"cost":223.09,"conv":1.0,"clicks":41.0,"revAvg":5964.79,"costAvg":159.4},{"d":"2026-06-29","rev":5627.3,"cost":147.73,"conv":2.0,"clicks":53.0,"revAvg":6097.23,"costAvg":155.12},{"d":"2026-06-30","rev":7421.87,"cost":78.1,"conv":2.0,"clicks":39.0,"revAvg":6515.64,"costAvg":142.2},{"d":"2026-07-01","rev":10118.44,"cost":163.32,"conv":3.0,"clicks":55.0,"revAvg":7073.12,"costAvg":142.34},{"d":"2026-07-02","rev":7326.04,"cost":79.48,"conv":0.0,"clicks":32.0,"revAvg":7349.47,"costAvg":133.29},{"d":"2026-07-03","rev":6797.72,"cost":233.79,"conv":3.0,"clicks":60.0,"revAvg":6959.28,"costAvg":158.14},{"d":"2026-07-04","rev":4975.67,"cost":64.88,"conv":3.0,"clicks":25.0,"revAvg":6803.76,"costAvg":141.48},{"d":"2026-07-05","rev":2746.0,"cost":186.95,"conv":2.0,"clicks":60.0,"revAvg":6430.43,"costAvg":136.32},{"d":"2026-07-06","rev":4050.06,"cost":157.77,"conv":1.0,"clicks":49.0,"revAvg":6205.11,"costAvg":137.76},{"d":"2026-07-07","rev":6354.28,"cost":168.04,"conv":4.0,"clicks":43.0,"revAvg":6052.6,"costAvg":150.6},{"d":"2026-07-08","rev":6731.57,"cost":157.83,"conv":3.0,"clicks":37.0,"revAvg":5568.76,"costAvg":149.82},{"d":"2026-07-09","rev":4918.71,"cost":107.79,"conv":2.0,"clicks":38.0,"revAvg":5224.86,"costAvg":153.86},{"d":"2026-07-10","rev":5655.36,"cost":167.5,"conv":1.0,"clicks":44.0,"revAvg":5061.66,"costAvg":144.39},{"d":"2026-07-11","rev":7693.38,"cost":118.75,"conv":2.0,"clicks":36.0,"revAvg":5449.91,"costAvg":152.09},{"d":"2026-07-12","rev":5069.44,"cost":249.35,"conv":2.0,"clicks":53.0,"revAvg":5781.83,"costAvg":161.0},{"d":"2026-07-13","rev":7938.37,"cost":180.97,"conv":0.0,"clicks":51.0,"revAvg":6337.3,"costAvg":164.32},{"d":"2026-07-14","rev":4808.4,"cost":141.65,"conv":3.0,"clicks":40.0,"revAvg":6116.46,"costAvg":160.55},{"d":"2026-07-15","rev":6907.54,"cost":81.54,"conv":2.0,"clicks":29.0,"revAvg":6141.6,"costAvg":149.65},{"d":"2026-07-16","rev":6254.69,"cost":77.97,"conv":1.67,"clicks":28.0,"revAvg":6332.45,"costAvg":145.39},{"d":"2026-07-17","rev":10049.19,"cost":201.11,"conv":2.0,"clicks":35.0,"revAvg":6960.14,"costAvg":150.19},{"d":"2026-07-18","rev":4732.81,"cost":232.44,"conv":1.0,"clicks":42.0,"revAvg":6537.21,"costAvg":166.43},{"d":"2026-07-19","rev":3452.55,"cost":105.82,"conv":1.0,"clicks":22.0,"revAvg":6306.22,"costAvg":145.93},{"d":"2026-07-20","rev":5949.95,"cost":243.2,"conv":0.0,"clicks":32.0,"revAvg":6022.16,"costAvg":154.82},{"d":"2026-07-21","rev":6634.49,"cost":155.99,"conv":1.0,"clicks":28.0,"revAvg":6283.03,"costAvg":156.87},{"d":"2026-07-22","rev":7730.01,"cost":206.28,"conv":0.33,"clicks":32.0,"revAvg":6400.53,"costAvg":174.69},{"d":"2026-07-23","rev":4446.06,"cost":210.5,"conv":2.0,"clicks":23.0,"revAvg":6142.15,"costAvg":193.62},{"d":"2026-07-24","rev":4708.38,"cost":90.04,"conv":0.0,"clicks":22.0,"revAvg":5379.18,"costAvg":177.75},{"d":"2026-07-25","rev":4728.07,"cost":187.75,"conv":2.0,"clicks":34.0,"revAvg":5378.5,"costAvg":171.37},{"d":"2026-07-26","rev":4809.49,"cost":76.63,"conv":2.0,"clicks":24.0,"revAvg":5572.35,"costAvg":167.2},{"d":"2026-07-27","rev":4358.01,"cost":130.23,"conv":2.0,"clicks":29.0,"revAvg":5344.93,"costAvg":151.06},{"d":"2026-07-28","rev":9033.16,"cost":192.07,"conv":3.0,"clicks":36.0,"revAvg":5687.6,"costAvg":156.21},{"d":"2026-07-29","rev":5259.76,"cost":151.74,"conv":2.0,"clicks":31.0,"revAvg":5334.7,"costAvg":148.42},{"d":"2026-07-30","rev":5207.31,"cost":230.97,"conv":3.0,"clicks":30.0,"revAvg":5443.45,"costAvg":151.35},{"d":"2026-07-31","rev":7360.56,"cost":106.08,"conv":1.0,"clicks":25.0,"revAvg":5822.34,"costAvg":153.64},{"d":"2026-08-01","rev":4632.14,"cost":157.93,"conv":1.0,"clicks":32.0,"revAvg":5808.63,"costAvg":149.38},{"d":"2026-08-02","rev":4232.6,"cost":83.05,"conv":2.0,"clicks":31.0,"revAvg":5726.22,"costAvg":150.3},{"d":"2026-08-03","rev":5065.49,"cost":197.02,"conv":3.0,"clicks":34.0,"revAvg":5827.29,"costAvg":159.84},{"d":"2026-08-04","rev":7263.64,"cost":148.01,"conv":1.0,"clicks":26.0,"revAvg":5574.5,"costAvg":153.54},{"d":"2026-08-05","rev":5489.81,"cost":222.2,"conv":2.0,"clicks":30.0,"revAvg":5607.36,"costAvg":163.61},{"d":"2026-08-06","rev":8514.35,"cost":115.45,"conv":3.0,"clicks":26.0,"revAvg":6079.8,"costAvg":147.11},{"d":"2026-08-07","rev":5114.98,"cost":164.11,"conv":2.0,"clicks":30.0,"revAvg":5759.0,"costAvg":155.4},{"d":"2026-08-08","rev":7440.96,"cost":166.52,"conv":2.0,"clicks":24.0,"revAvg":6160.26,"costAvg":156.62},{"d":"2026-08-09","rev":3356.87,"cost":174.76,"conv":3.0,"clicks":49.0,"revAvg":6035.16,"costAvg":169.72},{"d":"2026-08-10","rev":5836.84,"cost":189.28,"conv":4.0,"clicks":26.0,"revAvg":6145.35,"costAvg":168.62},{"d":"2026-08-11","rev":7288.96,"cost":163.4,"conv":1.0,"clicks":33.0,"revAvg":6148.97,"costAvg":170.82},{"d":"2026-08-12","rev":7264.0,"cost":118.72,"conv":1.0,"clicks":18.0,"revAvg":6402.42,"costAvg":156.03},{"d":"2026-08-13","rev":4102.26,"cost":193.03,"conv":0.0,"clicks":24.0,"revAvg":5772.12,"costAvg":167.12},{"d":"2026-08-14","rev":6136.64,"cost":187.1,"conv":0.0,"clicks":32.0,"revAvg":5918.08,"costAvg":170.4},{"d":"2026-08-15","rev":5211.16,"cost":138.03,"conv":0.0,"clicks":32.0,"revAvg":5599.53,"costAvg":166.33},{"d":"2026-08-16","rev":5859.83,"cost":181.24,"conv":0.0,"clicks":39.0,"revAvg":5957.1,"costAvg":167.26},{"d":"2026-08-17","rev":5197.74,"cost":133.7,"conv":0.0,"clicks":25.0,"revAvg":5865.8,"costAvg":159.32},{"d":"2026-08-18","rev":17070.81,"cost":196.56,"conv":0.0,"clicks":39.0,"revAvg":7263.21,"costAvg":164.05},{"d":"2026-08-19","rev":7931.55,"cost":139.82,"conv":1.0,"clicks":23.0,"revAvg":7358.57,"costAvg":167.07},{"d":"2026-08-20","rev":5966.2,"cost":414.84,"conv":0.0,"clicks":47.0,"revAvg":7624.85,"costAvg":198.76},{"d":"2026-08-21","rev":2805.9,"cost":409.84,"conv":1.0,"clicks":35.0,"revAvg":7149.03,"costAvg":230.58},{"d":"2026-08-22","rev":2864.1,"cost":224.5,"conv":2.0,"clicks":40.0,"revAvg":6813.73,"costAvg":242.93},{"d":"2026-08-23","rev":4854.22,"cost":203.75,"conv":0.0,"clicks":36.0,"revAvg":6670.07,"costAvg":246.14}],"thirds":[{"label":"2026-05-26 to 2026-06-24","days":30,"rev":181384,"revDay":6046,"cost":4760,"conv":36,"cpl":132.22,"clicks":913,"cvr":3.94},{"label":"2026-06-25 to 2026-07-24","days":30,"rev":185443,"revDay":6181,"cost":4616,"conv":51,"cpl":90.51,"clicks":1147,"cvr":4.45},{"label":"2026-07-25 to 2026-08-23","days":30,"rev":180257,"revDay":6009,"cost":5398,"conv":44,"cpl":122.69,"clicks":940,"cvr":4.68}],"total":{"days":90,"rev":547084,"revDay":6079,"cost":14774,"conv":131,"cpl":112.78,"clicks":3000,"cvr":4.37},"aug1":{"days":12,"rev":71501,"revDay":5958,"cost":1900,"conv":25,"cpl":76.02,"clicks":359,"cvr":6.96},"aug2":{"days":11,"rev":68000,"revDay":6182,"cost":2422,"conv":4,"cpl":605.6,"clicks":372,"cvr":1.08},"weeks":[{"s":"2026-05-26","e":"2026-06-01","rev":48069,"cost":1014.96,"conv":3},{"s":"2026-06-02","e":"2026-06-08","rev":42128,"cost":1162.34,"conv":10},{"s":"2026-06-09","e":"2026-06-15","rev":39622,"cost":1128.77,"conv":10},{"s":"2026-06-16","e":"2026-06-22","rev":40855,"cost":1122.83,"conv":10},{"s":"2026-06-23","e":"2026-06-29","rev":42681,"cost":1085.83,"conv":12},{"s":"2026-06-30","e":"2026-07-06","rev":43436,"cost":964.29,"conv":14},{"s":"2026-07-07","e":"2026-07-13","rev":44361,"cost":1150.23,"conv":14},{"s":"2026-07-14","e":"2026-07-20","rev":42155,"cost":1083.73,"conv":11},{"s":"2026-07-21","e":"2026-07-27","rev":37415,"cost":1057.42,"conv":9},{"s":"2026-07-28","e":"2026-08-03","rev":40791,"cost":1118.86,"conv":15},{"s":"2026-08-04","e":"2026-08-10","rev":43017,"cost":1180.33,"conv":17},{"s":"2026-08-11","e":"2026-08-17","rev":41061,"cost":1115.22,"conv":2}],"months":{"2026-05":{"rev":41253,"cost":861,"conv":3,"clicks":178.0,"days":6,"cpl":287.0,"revDay":6876},"2026-06":{"rev":179525,"cost":4732,"conv":44,"clicks":966.0,"days":30,"cpl":107.55,"revDay":5984},"2026-07":{"rev":186805,"cost":4858,"conv":55,"clicks":1125.0,"days":31,"cpl":88.33,"revDay":6026},"2026-08":{"rev":139501,"cost":4323,"conv":29,"clicks":731.0,"days":23,"cpl":149.07,"revDay":6065}},"start":"2026-05-26","end":"2026-08-23","extraRev":{"d":"2026-08-24","rev":4979.14}};
+
+const money0 = v => "$" + Math.round(v).toLocaleString("en-US");
+const money2 = v => "$" + v.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const dlab = iso => { const p = iso.split("-"); return (+p[2]) + " " + MON[(+p[1])-1]; };
+
+/* ---------- stat row ---------- */
+const T = D.total;
+document.getElementById("s-rev").textContent = money0(T.rev);
+document.getElementById("s-revday").textContent = money0(T.revDay);
+document.getElementById("s-cost").textContent = money0(T.cost);
+document.getElementById("s-costday").textContent = money0(T.cost / T.days);
+document.getElementById("s-cpl").textContent = money2(T.cpl);
+document.getElementById("s-conv").textContent = T.conv;
+document.getElementById("s-mult").textContent = (T.rev / T.cost).toFixed(0) + "×";
+document.getElementById("p-rev").textContent = money0(T.rev);
+document.getElementById("p-revday").textContent = money0(T.revDay);
+document.getElementById("p-cost").textContent = money0(T.cost);
+document.getElementById("p-costday").textContent = money0(T.cost / T.days);
+
+/* ---------- comparison table ---------- */
+const th = D.thirds;
+const rows = [
+  {k:"Billed revenue",      cls:"rev-row", f:b=>money0(b.rev)},
+  {k:"Revenue per day",     cls:"rev-row", f:b=>money0(b.revDay)},
+  {k:"Ad spend",            cls:"ads-row blk", f:b=>money0(b.cost)},
+  {k:"Clicks",              cls:"", f:b=>b.clicks.toLocaleString("en-US")},
+  {k:"Conversions",         cls:"", f:b=>String(b.conv)},
+  {k:"Cost per lead",       cls:"", f:b=>money2(b.cpl)},
+  {k:"Conversion rate",     cls:"", f:b=>b.cvr.toFixed(2) + "%"},
+  {k:"Revenue per ad $",    cls:"", f:b=>(b.rev/b.cost).toFixed(0) + "×"}
+];
+document.getElementById("tbody").innerHTML = rows.map(r =>
+  `<tr class="${r.cls}"><td>${r.k}</td>` + th.map(b => `<td>${r.f(b)}</td>`).join("") + `</tr>`
+).join("");
+
+/* ---------- chart engine ---------- */
+const tip = document.getElementById("tip");
+function showTip(html, x, y){ tip.innerHTML = html; tip.style.left = x + "px"; tip.style.top = y + "px"; tip.style.opacity = 1; }
+function hideTip(){ tip.style.opacity = 0; }
+
+const W = 1000, H = 300, M = {t:18, r:20, b:34, l:64};
+const IW = W - M.l - M.r, IH = H - M.t - M.b;
+
+/* round axis steps: never lands on 0, 1.5, 3, 4.5 style ticks */
+function niceTicks(rawMax, maxIntervals){
+  if(!(rawMax > 0)) return {max:1, vals:[0,1]};
+  const rough = rawMax / maxIntervals;
+  const mag = Math.pow(10, Math.floor(Math.log10(rough)));
+  let step = 10 * mag;
+  for(const m of [1, 2, 2.5, 5, 10]){
+    if(mag * m >= rough){ step = mag * m; break; }
+  }
+  const top = Math.ceil(rawMax / step) * step;
+  const vals = [];
+  for(let v = 0; v <= top + step/1000; v += step) vals.push(+v.toFixed(6));
+  return {max:top, vals};
+}
+
+function frame(svg, max, fmt, n, band, tickVals){
+  const X = i => M.l + (n === 1 ? IW/2 : IW * i / (n-1));
+  const Y = v => M.t + IH - IH * (v / max);
+  let g = "";
+  if(band){
+    const x0 = X(band.from) - (IW/(n-1))/2, x1 = X(band.to) + (IW/(n-1))/2;
+    g += `<rect x="${x0.toFixed(1)}" y="${M.t}" width="${(x1-x0).toFixed(1)}" height="${IH}" fill="var(--bad-soft)" stroke="var(--bad)" stroke-width="1" stroke-dasharray="3 3" rx="3"/>`;
+    g += `<text x="${((x0+x1)/2).toFixed(1)}" y="${M.t + 15}" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--bad)" letter-spacing="0.6">TRACKING GAP</text>`;
+  }
+  for(const v of tickVals){
+    const y = Y(v);
+    g += `<line class="gridline" x1="${M.l}" y1="${y.toFixed(1)}" x2="${W-M.r}" y2="${y.toFixed(1)}"/>`;
+    g += `<text class="tick" x="${M.l-10}" y="${(y+3.5).toFixed(1)}" text-anchor="end">${fmt(v)}</text>`;
+  }
+  g += `<line class="axis" x1="${M.l}" y1="${M.t+IH}" x2="${W-M.r}" y2="${M.t+IH}"/>`;
+  const every = Math.ceil(n / 11);
+  for(let i = 0; i < n; i++){
+    if(i % every === 0 || i === n-1)
+      g += `<text class="tick" x="${X(i).toFixed(1)}" y="${H-13}" text-anchor="middle">${dlab(D.series[i].d)}</text>`;
+  }
+  return {g, X, Y};
+}
+
+function hover(svg, X, n, build){
+  const step = IW / (n-1);
+  let g = `<line id="cx" x1="0" y1="${M.t}" x2="0" y2="${M.t+IH}" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="3 3" opacity="0"/>`;
+  g += `<g id="mk" opacity="0"></g>`;
+  for(let i = 0; i < n; i++)
+    g += `<rect class="hit" data-i="${i}" x="${(X(i)-step/2).toFixed(1)}" y="${M.t}" width="${step.toFixed(1)}" height="${IH}" fill="transparent"/>`;
+  return g;
+}
+
+function wire(svg, X, build){
+  const cx = svg.querySelector("#cx"), mk = svg.querySelector("#mk");
+  svg.querySelectorAll(".hit").forEach(h => {
+    const on = e => {
+      const i = +h.dataset.i;
+      const pt = e.touches ? e.touches[0] : e;
+      cx.setAttribute("x1", X(i)); cx.setAttribute("x2", X(i)); cx.setAttribute("opacity","1");
+      const b = build(i);
+      mk.innerHTML = b.marks; mk.setAttribute("opacity","1");
+      showTip(b.html, pt.clientX, pt.clientY);
+    };
+    h.addEventListener("mousemove", on);
+    h.addEventListener("touchstart", on, {passive:true});
+    h.addEventListener("mouseleave", () => { hideTip(); cx.setAttribute("opacity","0"); mk.setAttribute("opacity","0"); });
+  });
+  svg.addEventListener("mouseleave", () => { hideTip(); cx.setAttribute("opacity","0"); mk.setAttribute("opacity","0"); });
+}
+
+/* --- line + trailing-average chart --- */
+function lineChart(id, key, avgKey, color, fmtAxis, fmtVal, label){
+  const svg = document.getElementById(id);
+  const n = D.series.length;
+  const tk = niceTicks(Math.max(...D.series.map(s => s[key])) * 1.02, 4);
+  const max = tk.max;
+  const {g:base, X, Y} = frame(svg, max, fmtAxis, n, null, tk.vals);
+  let g = base;
+
+  const area = D.series.map((s,i) => `${i?"L":"M"}${X(i).toFixed(1)},${Y(s[avgKey]).toFixed(1)}`).join(" ");
+  g += `<path d="${area} L${X(n-1).toFixed(1)},${(M.t+IH).toFixed(1)} L${X(0).toFixed(1)},${(M.t+IH).toFixed(1)} Z" fill="${color}" opacity="0.10"/>`;
+
+  const raw = D.series.map((s,i) => `${i?"L":"M"}${X(i).toFixed(1)},${Y(s[key]).toFixed(1)}`).join(" ");
+  g += `<path d="${raw}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.40"/>`;
+  g += `<path d="${area}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+
+  const last = D.series[n-1];
+  g += `<circle cx="${X(n-1).toFixed(1)}" cy="${Y(last[avgKey]).toFixed(1)}" r="4.5" fill="${color}" stroke="var(--card)" stroke-width="2"/>`;
+
+  g += hover(svg, X, n);
+  svg.innerHTML = g;
+  wire(svg, X, i => {
+    const s = D.series[i];
+    return {
+      marks: `<circle cx="${X(i).toFixed(1)}" cy="${Y(s[key]).toFixed(1)}" r="4" fill="var(--card)" stroke="${color}" stroke-width="2"/>`
+           + `<circle cx="${X(i).toFixed(1)}" cy="${Y(s[avgKey]).toFixed(1)}" r="4.5" fill="${color}" stroke="var(--card)" stroke-width="2"/>`,
+      html: `<div class="d">${dlab(s.d)}</div>`
+          + `<div class="r"><span class="sw" style="background:${color};opacity:.45"></span>${label}<b>${fmtVal(s[key])}</b></div>`
+          + `<div class="r"><span class="sw" style="background:${color}"></span>7-day avg<b>${fmtVal(s[avgKey])}</b></div>`
+    };
+  });
+}
+
+/* --- conversions bar chart --- */
+function barChart(id){
+  const svg = document.getElementById(id);
+  const n = D.series.length;
+  const tk = niceTicks(Math.max(...D.series.map(s => s.conv)), 4);
+  const max = tk.max;
+  const gapFrom = D.series.findIndex(s => s.d === "2026-08-13");
+  const gapTo   = D.series.findIndex(s => s.d === "2026-08-23");
+  const {g:base, X, Y} = frame(svg, max, v => String(Math.round(v)), n, {from:gapFrom, to:gapTo}, tk.vals);
+  let g = base;
+
+  const step = IW / (n-1);
+  const bw = Math.max(3, step - 2);
+  D.series.forEach((s,i) => {
+    if(!s.conv) return;
+    const h = (M.t + IH) - Y(s.conv);
+    g += `<rect x="${(X(i)-bw/2).toFixed(1)}" y="${Y(s.conv).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="var(--ads)"/>`;
+  });
+
+  g += hover(svg, X, n);
+  svg.innerHTML = g;
+  wire(svg, X, i => {
+    const s = D.series[i];
+    const inGap = i >= gapFrom && i <= gapTo;
+    return {
+      marks: `<rect x="${(X(i)-bw/2-1.5).toFixed(1)}" y="${Y(s.conv).toFixed(1)}" width="${(bw+3).toFixed(1)}" height="${((M.t+IH)-Y(s.conv)).toFixed(1)}" rx="3" fill="none" stroke="var(--ink)" stroke-width="1.5" opacity="${s.conv?1:0}"/>`,
+      html: `<div class="d">${dlab(s.d)}${inGap ? " &middot; tracking gap" : ""}</div>`
+          + `<div class="r"><span class="sw" style="background:var(--ads)"></span>Conversions<b>${s.conv}</b></div>`
+          + `<div class="r"><span class="sw" style="background:var(--ads);opacity:.45"></span>Clicks<b>${s.clicks}</b></div>`
+          + `<div class="r"><span class="sw" style="background:var(--rev)"></span>Revenue<b>${money0(s.rev)}</b></div>`
+    };
+  });
+}
+
+lineChart("c-rev",  "rev",  "revAvg",  "var(--rev)", v => v ? "$" + (v/1000) + "k" : "$0", money0, "Billed");
+lineChart("c-cost", "cost", "costAvg", "var(--ads)", v => "$" + Math.round(v),            money0, "Spend");
+barChart("c-conv");
+</script>
+
+</body>
+</html>
