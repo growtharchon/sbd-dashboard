@@ -2,9 +2,12 @@
  * SBD — Google Ads → Google Sheet auto-sync  (daily feed + KAs-style analysis)
  * ----------------------------------------------------------------------------
  * Writes TWO tabs into your Google Sheet:
- *   • "ads"          — daily time series (rolling 90 days) for trend charts
- *   • "00-analysis"  — KAs-style breakdown: campaign KPIs (CPL/CTR/CVR),
- *                      device split, conversion actions (by value), change log
+ *   • "ads"          — daily time series (rolling 90 days) for trend charts,
+ *                      including conversion value and ROAS per day
+ *   • "00-analysis"  — KAs-style breakdown: campaign KPIs (CPL/CTR/CVR, plus
+ *                      booking value and ROAS per campaign), device split,
+ *                      conversion actions (by value), ad groups by spend
+ *                      (so "how much went to tint / PPF" is answerable), change log
  *
  * SETUP (one time)
  *   1. Google Ads → Tools → Bulk actions → Scripts → +  (blue plus).
@@ -47,21 +50,54 @@ function writeDailyTab() {
   var startD = new Date(); startD.setDate(startD.getDate() - DAYS_BACK);
   var start = Utilities.formatDate(startD, tz, "yyyy-MM-dd");
 
+  // A. Spend and volume per day.
+  var daily = {};
   var rows = AdsApp.report(
     "SELECT segments.date, metrics.clicks, metrics.conversions, metrics.cost_micros " +
     "FROM customer WHERE segments.date BETWEEN '" + start + "' AND '" + end + "' " +
     "ORDER BY segments.date ASC").rows();
-
-  var out = [["Date", "Clicks", "Conversions", "Cost / conv.", "Cost"]];
   while (rows.hasNext()) {
     var r = rows.next();
     var date = String(r["segments.date"]).substring(0, 10);
-    var clicks = parseInt(r["metrics.clicks"], 10) || 0;
-    var conv = parseFloat(r["metrics.conversions"]) || 0;
-    var cost = (parseInt(r["metrics.cost_micros"], 10) || 0) / 1e6;
-    out.push([date, clicks, round2(conv), round2(conv ? cost / conv : 0), round2(cost)]);
+    daily[date] = {
+      clicks: parseInt(r["metrics.clicks"], 10) || 0,
+      conv: parseFloat(r["metrics.conversions"]) || 0,
+      cost: (parseInt(r["metrics.cost_micros"], 10) || 0) / 1e6,
+      revVal: 0, leadVal: 0
+    };
   }
-  writeGrid_(DAILY_TAB, out, 5, [1]);
+
+  // B. Conversion value per day, split by what the value actually means.
+  //
+  // PURCHASE and BOOK_APPOINTMENT carry real booking amounts. Phone-call leads
+  // carry a flat assumed value (currently $50 a call, which is why 24 calls
+  // come to exactly $1,200) — a planning assumption, not money that arrived.
+  // Summing the two produces a ROAS that overstates revenue, so they stay in
+  // separate columns and the ROAS column below counts only the real one.
+  var vq = AdsApp.report(
+    "SELECT segments.date, segments.conversion_action_category, metrics.conversions_value " +
+    "FROM campaign WHERE segments.date BETWEEN '" + start + "' AND '" + end + "'").rows();
+  while (vq.hasNext()) {
+    var v = vq.next();
+    var d = String(v["segments.date"]).substring(0, 10);
+    if (!daily[d]) continue;
+    var cat = String(v["segments.conversion_action_category"] || "");
+    var val = parseFloat(v["metrics.conversions_value"]) || 0;
+    if (cat === "PURCHASE" || cat === "BOOK_APPOINTMENT") daily[d].revVal += val;
+    else daily[d].leadVal += val;
+  }
+
+  // The first five columns keep their exact names and positions: the client
+  // dashboard looks columns up by header, and the daily Slack agent reads the
+  // new ones only when they are present.
+  var out = [["Date", "Clicks", "Conversions", "Cost / conv.", "Cost",
+              "Revenue value", "Lead value", "ROAS"]];
+  Object.keys(daily).sort().forEach(function (d) {
+    var x = daily[d];
+    out.push([d, x.clicks, round2(x.conv), round2(x.conv ? x.cost / x.conv : 0), round2(x.cost),
+              round2(x.revVal), round2(x.leadVal), round2(x.cost ? x.revVal / x.cost : 0)]);
+  });
+  writeGrid_(DAILY_TAB, out, 8, [1]);
   Logger.log("Wrote " + (out.length - 1) + " days to '" + DAILY_TAB + "'.");
 }
 
@@ -76,8 +112,24 @@ function writeAnalysisTab() {
 
   // CAMPAIGN KPIs
   out.push(["CAMPAIGN KPIs (active or has-spend)"]);
-  out.push(["Campaign", "Status", "Clicks", "Impr", "Cost USD", "Conv", "CPL", "CTR %", "CVR %"]);
-  var tot = { clicks: 0, impr: 0, cost: 0, conv: 0 }, camps = [];
+  out.push(["Campaign", "Status", "Clicks", "Impr", "Cost USD", "Conv", "CPL", "CTR %", "CVR %", "Booking value", "ROAS"]);
+  var tot = { clicks: 0, impr: 0, cost: 0, conv: 0, val: 0 }, camps = [];
+
+  // Booking value per campaign. Same rule as the daily tab: only PURCHASE and
+  // BOOK_APPOINTMENT count, the flat phone-call placeholder never does.
+  var campVal = {};
+  try {
+    var cvq = AdsApp.report(
+      "SELECT campaign.name, segments.conversion_action_category, metrics.conversions_value " +
+      "FROM campaign WHERE segments.date DURING LAST_30_DAYS").rows();
+    while (cvq.hasNext()) {
+      var cv = cvq.next();
+      var ccat = String(cv["segments.conversion_action_category"] || "");
+      if (ccat !== "PURCHASE" && ccat !== "BOOK_APPOINTMENT") continue;
+      var cn = cv["campaign.name"];
+      campVal[cn] = (campVal[cn] || 0) + (parseFloat(cv["metrics.conversions_value"]) || 0);
+    }
+  } catch (e) { Logger.log("campaign value query failed: " + e); }
   var cq = AdsApp.report(
     "SELECT campaign.name, campaign.status, metrics.clicks, metrics.impressions, metrics.cost_micros, metrics.conversions " +
     "FROM campaign WHERE segments.date DURING LAST_30_DAYS").rows();
@@ -89,16 +141,19 @@ function writeAnalysisTab() {
     var conv = parseFloat(c["metrics.conversions"]) || 0;
     var status = c["campaign.status"];
     if (cost <= 0 && status !== "ENABLED") continue;
-    camps.push({ name: c["campaign.name"], status: status, clicks: clicks, impr: impr, cost: cost, conv: conv });
-    tot.clicks += clicks; tot.impr += impr; tot.cost += cost; tot.conv += conv;
+    var val = campVal[c["campaign.name"]] || 0;
+    camps.push({ name: c["campaign.name"], status: status, clicks: clicks, impr: impr, cost: cost, conv: conv, val: val });
+    tot.clicks += clicks; tot.impr += impr; tot.cost += cost; tot.conv += conv; tot.val += val;
   }
   camps.sort(function (a, b) { return b.cost - a.cost; });
   camps.forEach(function (c) {
     out.push([c.name, c.status, c.clicks, c.impr, round2(c.cost), round2(c.conv),
-      round2(c.conv ? c.cost / c.conv : 0), round2(c.impr ? c.clicks / c.impr * 100 : 0), round2(c.clicks ? c.conv / c.clicks * 100 : 0)]);
+      round2(c.conv ? c.cost / c.conv : 0), round2(c.impr ? c.clicks / c.impr * 100 : 0), round2(c.clicks ? c.conv / c.clicks * 100 : 0),
+      round2(c.val), round2(c.cost ? c.val / c.cost : 0)]);
   });
   out.push(["ACCOUNT TOTAL", "", tot.clicks, tot.impr, round2(tot.cost), round2(tot.conv),
-    round2(tot.conv ? tot.cost / tot.conv : 0), round2(tot.impr ? tot.clicks / tot.impr * 100 : 0), round2(tot.clicks ? tot.conv / tot.clicks * 100 : 0)]);
+    round2(tot.conv ? tot.cost / tot.conv : 0), round2(tot.impr ? tot.clicks / tot.impr * 100 : 0), round2(tot.clicks ? tot.conv / tot.clicks * 100 : 0),
+    round2(tot.val), round2(tot.cost ? tot.val / tot.cost : 0)]);
   out.push([]);
 
   // DEVICE SPLIT
@@ -138,6 +193,28 @@ function writeAnalysisTab() {
   Object.keys(ca).forEach(function (nm) { out.push([nm, ca[nm].cat, round2(ca[nm].conv), round2(ca[nm].val)]); });
   out.push([]);
 
+  // AD GROUPS (spend by service). Performance Max has asset groups, not ad
+  // groups, so this covers the Search and Brand campaigns only. The dashboard
+  // buckets each ad group into a service (tint, PPF, ceramic, ...) by name.
+  out.push(["AD GROUPS (last 30 days, search campaigns only)"]);
+  out.push(["Ad group", "Campaign", "Clicks", "Impr", "Cost USD", "Conv", "CPL"]);
+  try {
+    var gq = AdsApp.report(
+      "SELECT ad_group.name, campaign.name, metrics.clicks, metrics.impressions, metrics.cost_micros, metrics.conversions " +
+      "FROM ad_group WHERE segments.date DURING LAST_30_DAYS AND metrics.cost_micros > 0 " +
+      "ORDER BY metrics.cost_micros DESC").rows();
+    while (gq.hasNext()) {
+      var g = gq.next();
+      var gcost = (parseInt(g["metrics.cost_micros"], 10) || 0) / 1e6;
+      var gconv = parseFloat(g["metrics.conversions"]) || 0;
+      out.push([g["ad_group.name"], g["campaign.name"], parseInt(g["metrics.clicks"], 10) || 0,
+        parseInt(g["metrics.impressions"], 10) || 0, round2(gcost), round2(gconv), round2(gconv ? gcost / gconv : 0)]);
+    }
+  } catch (err2) {
+    out.push(["(ad group query needs a tweak: " + err2 + ")"]);
+  }
+  out.push([]);
+
   // CHANGE HISTORY (best-effort — the change_event query is the one most likely to need a tweak)
   out.push(["CHANGE HISTORY (last 14 days)"]);
   try {
@@ -171,6 +248,6 @@ function writeAnalysisTab() {
     out.push(["(change history query needs a tweak: " + err + ")"]);
   }
 
-  writeGrid_(ANALYSIS_TAB, out, 9);
+  writeGrid_(ANALYSIS_TAB, out, 11);
   Logger.log("Wrote '" + ANALYSIS_TAB + "' (" + camps.length + " campaigns).");
 }

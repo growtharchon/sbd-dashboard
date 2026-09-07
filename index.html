@@ -64,7 +64,10 @@
   @media (max-width:620px){ .section-h .note { margin-left:0; } .mini-filter { width:100%; } .mini-filter button { flex:1; } }
 
   .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:16px 0 14px; }
-  @media (max-width:720px){ .kpis { grid-template-columns:repeat(2,1fr);} }
+  .kpis.six { grid-template-columns:repeat(6,1fr); }
+  @media (max-width:900px){ .kpis.six { grid-template-columns:repeat(3,1fr);} }
+  @media (max-width:720px){ .kpis { grid-template-columns:repeat(2,1fr);} .kpis.six { grid-template-columns:repeat(2,1fr);} }
+  .tile .hint { font-size:11.5px; color:var(--muted); margin-top:4px; line-height:1.35; }
   .tile { background:var(--surface); border:1px solid var(--border); border-radius:14px;
     padding:16px 16px 14px; box-shadow:var(--shadow); }
   .tile .label { font-size:12px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.03em; }
@@ -135,6 +138,38 @@
     background:var(--surface); border:1px solid var(--border); border-radius:8px; box-shadow:var(--shadow);
     padding:8px 10px; font-size:12.5px; color:var(--text-primary); transform:translate(-50%,-115%); }
   .tt b { font-size:13px; } .tt .row { color:var(--text-secondary); margin-top:2px; }
+
+  /* plain-English explainer */
+  details.explain { background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow); margin:0 0 20px; }
+  details.explain summary { cursor:pointer; list-style:none; padding:13px 16px; font-size:14px; font-weight:600; display:flex; align-items:center; gap:10px; }
+  details.explain summary::-webkit-details-marker { display:none; }
+  details.explain summary .q { width:22px; height:22px; border-radius:50%; background:var(--accent-wash); color:var(--series-1); display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex:none; }
+  details.explain summary .hintt { margin-left:auto; font-size:12px; color:var(--muted); font-weight:400; }
+  details.explain[open] summary .hintt { display:none; }
+  .explain dl { margin:0; padding:0 16px 14px; display:grid; grid-template-columns:1fr 1fr; gap:10px 22px; }
+  @media (max-width:760px){ .explain dl { grid-template-columns:1fr; } }
+  .explain dt { font-size:13px; font-weight:700; color:var(--text-primary); }
+  .explain dd { margin:2px 0 0; font-size:13px; color:var(--text-secondary); line-height:1.5; }
+  .explain dd b { color:var(--text-primary); font-weight:600; }
+  .bar { height:8px; border-radius:4px; background:var(--grid); overflow:hidden; min-width:70px; }
+  .bar i { display:block; height:100%; background:var(--series-1); }
+  td.barcell { min-width:110px; } td.barcell .bar { display:inline-block; vertical-align:middle; width:70px; margin-right:6px; }
+  .splitseg.mid{background:var(--series-3);color:#000;}
+  .splitseg.mid span{opacity:.8;}
+  .campnote { font-size:12.5px; color:var(--text-secondary); line-height:1.55; padding:10px 12px 2px; }
+  .campnote b { color:var(--text-primary); }
+  /* usual questions */
+  .faq { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:0 0 20px; }
+  .faq .qa:last-child:nth-child(odd) { grid-column:1 / -1; }
+  @media (max-width:820px){ .faq { grid-template-columns:1fr; } }
+  .faq .qa { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px 16px 12px; box-shadow:var(--shadow); }
+  .faq h4 { margin:0 0 8px; font-size:14.5px; letter-spacing:-0.01em; color:var(--text-primary); }
+  .faq h4 .qm { color:var(--series-1); font-weight:800; margin-right:6px; }
+  .faq ul { margin:0; padding-left:18px; }
+  .faq li { font-size:13.5px; color:var(--text-secondary); line-height:1.5; margin:4px 0; }
+  .faq li b { color:var(--text-primary); font-weight:600; }
+  .faq li a { color:var(--series-1); text-decoration:none; }
+  .faq li a:hover { text-decoration:underline; }
 </style>
 </head>
 <body>
@@ -144,7 +179,7 @@
     <span class="badge" id="mode-badge" style="display:none"></span>
   </div>
   <div class="sub" id="range">&nbsp;</div>
-  <div class="source">Google Ads · Fieldd revenue · Google Analytics · Search Console — revenue is a manual import for now</div>
+  <div class="source">Google Ads · Fieldd revenue · Google Analytics · Search Console</div>
 </div></header>
 
 <div class="toolbar"><div class="inner">
@@ -213,34 +248,131 @@ function shape(csvText, colmap){
   const findCol=t=>{ t=t.toLowerCase(); let i=head.indexOf(t); if(i<0)i=head.findIndex(h=>h.includes(t)); return i; };
   const iDate=findCol("date");
   const idx={}; Object.keys(colmap).forEach(k=>idx[k]=findCol(colmap[k]));
-  return rows.map(r=>{
+  const out=rows.map(r=>{
     const date=String(r[iDate]).trim().substring(0,10);
     const o={ date, label:dayLabel(date), partial: date>=tISO };
-    Object.keys(colmap).forEach(k=>o[k]=num(r[idx[k]]));
+    Object.keys(colmap).forEach(k=>o[k]=idx[k]>=0?num(r[idx[k]]):0);
     return o;
   }).filter(o=>/^\d{4}-\d{2}-\d{2}$/.test(o.date)).sort((a,b)=>a.date<b.date?-1:1).slice(-90);
+  out.cols=idx;   // which optional columns the feed actually carries (-1 = absent)
+  return out;
 }
 
+/* The daily Ads feed only carries conversion value once the updated Ads script
+   has run (columns "Revenue value", "Lead value", "ROAS"). Until then every
+   value-based tile falls back to the 30-day account report. */
+function adsHasValue(){ return !!(DATA.ads && DATA.ads.cols && DATA.ads.cols.revVal>=0 && sum(DATA.ads,"revVal")>0); }
+function adsRoas(rows){ const c=sum(rows,"cost"), v=sum(rows,"revVal"); return c?v/c:0; }
+const roasFmt = v => v ? v.toFixed(2)+"x" : "—";
+
+/* Return figures from the 30-day account report: online bookings carry real
+   booking amounts; phone calls carry either $0 or a flat per-call estimate,
+   which is a planning figure, never revenue. */
+function adsReturn30(a){
+  a=a||ANALYSIS; if(!a||!a.conv) return null;
+  const isBook=c=>c.category==="PURCHASE"||c.category==="BOOK_APPOINTMENT";
+  const isCall=c=>c.category==="PHONE_CALL_LEAD";
+  const book=a.conv.filter(isBook), call=a.conv.filter(isCall), other=a.conv.filter(c=>!isBook(c)&&!isCall(c));
+  const bookConv=book.reduce((s,c)=>s+c.conversions,0), bookVal=book.reduce((s,c)=>s+c.value,0);
+  const callConv=call.reduce((s,c)=>s+c.conversions,0), callVal=call.reduce((s,c)=>s+c.value,0);
+  const otherConv=other.reduce((s,c)=>s+c.conversions,0);
+  const spend=a.total?a.total.cost:0, totConv=a.total?a.total.conv:(bookConv+callConv+otherConv);
+  // placeholder per call, taken only from the call actions that carry a value
+  const valued=call.filter(c=>c.value>0&&c.conversions>0);
+  const perCall=valued.length? valued.reduce((s,c)=>s+c.value,0)/valued.reduce((s,c)=>s+c.conversions,0) : 0;
+  return { bookConv, bookVal, callConv, callVal, perCall, otherConv, spend, totConv, roas: spend?bookVal/spend:0 };
+}
+
+/* Accepts "24th Aug", "24th Aug 2026", "2026-08-29", "2026-08-29 14:33:01" and 8/29/2026. */
 function parseBilledDate(s){
-  const parts=String(s).replace(/(\d+)(st|nd|rd|th)/i,"$1").trim().split(/\s+/);
+  const raw=String(s).trim();
+  const iso=raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(iso) return iso[1]+"-"+iso[2]+"-"+iso[3];
+  const us=raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(us) return us[3]+"-"+String(+us[1]).padStart(2,"0")+"-"+String(+us[2]).padStart(2,"0");
+  const parts=raw.replace(/(\d+)(st|nd|rd|th)/i,"$1").split(/\s+/);
   if(parts.length<2) return "";
   const month=MONTHS.findIndex(m=>m.toLowerCase()===parts[1].slice(0,3).toLowerCase())+1;
   const day=parseInt(parts[0],10);
   if(!month||!day) return "";
-  const y=new Date().getFullYear();
+  // Year: use it if the source gave one, else infer. A month more than one ahead
+  // of the current month belongs to last year, so Dec rows read in Jan do not
+  // silently jump forward twelve months.
+  const now=new Date();
+  const y=(parts[2]&&/^\d{4}$/.test(parts[2])) ? +parts[2]
+        : (month > now.getMonth()+2 ? now.getFullYear()-1 : now.getFullYear());
   return y+"-"+String(month).padStart(2,"0")+"-"+String(day).padStart(2,"0");
 }
 
-function shapeRevenue(csvText){
-  const tISO=todayISO();
+/* Parses a revenue CSV into {isoDate: total}. Sums many rows per day, so it
+   takes either a pre-aggregated daily export or the per-sale rows Zapier
+   appends. Rows without a positive amount are dropped, which is what removes
+   the dead apps-script webhook rows (timestamp in col A, nothing in col B).
+   Future-dated rows are dropped too: revenue cannot land ahead of today, so a
+   future date means the wrong field got mapped upstream. */
+function parseRevenueRows(csvText, matchDate, matchAmount){
+  const out={};
+  if(!csvText||!csvText.trim()) return out;
   const rows=parseCSV(csvText.trim());
+  if(!rows.length) return out;
   const head=rows.shift().map(h=>h.trim().toLowerCase());
-  const iDate=head.findIndex(h=>h.includes("job completed")||h==="date");
-  const iRevenue=head.findIndex(h=>h.includes("total billed")||h.includes("revenue"));
-  return rows.map(r=>{
-    const date=parseBilledDate(r[iDate]);
-    return { date, label:dayLabel(date), partial:date>=tISO, revenue:num(r[iRevenue]) };
-  }).filter(o=>/^\d{4}-\d{2}-\d{2}$/.test(o.date)).sort((a,b)=>a.date<b.date?-1:1).slice(-90);
+  const iDate=head.findIndex(matchDate), iAmt=head.findIndex(matchAmount);
+  if(iDate<0||iAmt<0){ console.warn("revenue: header not recognised", head); return out; }
+  const tISO=todayISO();
+  let future=0;
+  for(const r of rows){
+    const d=parseBilledDate(r[iDate]);
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(d)) continue;
+    const v=num(r[iAmt]);
+    if(!(v>0)) continue;
+    if(d>tISO){ future++; continue; }
+    out[d]=(out[d]||0)+v;
+  }
+  if(future) console.warn("revenue: dropped "+future+" future-dated row(s); check the date field mapped in Zapier");
+  return out;
+}
+
+/* History (the Billed export) plus the live Zapier feed, stitched at an
+   explicit cutover date. History wins strictly before it, live from it onward.
+
+   The cutover is deliberately explicit rather than inferred from the live data.
+   Inferring it from the earliest live row breaks whenever the feed is sparse or
+   still holds a test record: one $75 test row dated 27 Aug would take over that
+   whole day and erase every day after it that the feed had not reached yet. */
+function shapeRevenue(historyCsv, liveCsv, cutover){
+  cutover = cutover || (typeof REVENUE_CUTOVER!=="undefined" ? REVENUE_CUTOVER : "");
+  const hist=parseRevenueRows(historyCsv,
+    h=>h.includes("job completed")||h==="date",
+    h=>h.includes("total billed")||h.includes("revenue"));
+  const live=parseRevenueRows(liveCsv,
+    h=>h==="date"||h.includes("date"),
+    h=>h.includes("paid amount")||h.includes("amount")||h.includes("revenue"));
+
+  const merged={};
+  for(const d in hist) merged[d]=hist[d];
+
+  const usable=/^\d{4}-\d{2}-\d{2}$/.test(cutover)
+    ? Object.keys(live).filter(d=>d>=cutover) : [];
+
+  if(cutover && !usable.length){
+    console.warn("revenue: live feed has nothing on/after cutover "+cutover+", using history only");
+  }
+  if(usable.length){
+    for(const d in merged) if(d>=cutover) delete merged[d];
+    usable.forEach(d=>{ merged[d]=live[d]; });
+    const histDates=Object.keys(hist).sort();
+    const lastHist=histDates.length?histDates[histDates.length-1]:null;
+    if(lastHist){
+      const next=new Date(lastHist+"T00:00:00Z"); next.setUTCDate(next.getUTCDate()+1);
+      if(next.toISOString().slice(0,10)<cutover)
+        console.warn("revenue: gap, history ends "+lastHist+" but cutover is "+cutover+"; refresh Billed (1).csv");
+    }
+  }
+
+  const tISO=todayISO();
+  return Object.keys(merged).sort()
+    .map(d=>({ date:d, label:dayLabel(d), partial:d>=tISO, revenue:merged[d] }))
+    .slice(-90);
 }
 
 function avg(rows,k){ return rows.length ? sum(rows,k)/rows.length : 0; }
@@ -346,33 +478,47 @@ function buildSection(cfg,full,window){
     root.appendChild(box); return;
   }
 
-  const kp=el("div","kpis");
-  cfg.tiles.forEach(t=>{
+  const tiles=cfg.tiles.filter(t=>!t.when||t.when());
+  const kp=el("div","kpis"+(tiles.length>4?" six":""));
+  tiles.forEach(t=>{
     const cv=t.val(cur), pv=prev.length?t.val(prev):null, d=chg(cv,pv);
     const up=d>=0, good=t.goodUp?up:!up;
     kp.appendChild(el("div","tile",
       `<div class="label">${t.label}</div><div class="value">${t.fmt(cv)}</div>
-       <div class="delta ${d===null?"":(good?"up":"down")}">${d===null?'<span class="vs">—</span>':`${up?"▲":"▼"} ${deltaLabel(d)} <span class="vs">vs prev ${window}d</span>`}</div>`));
+       <div class="delta ${d===null?"":(good?"up":"down")}">${d===null?'<span class="vs">—</span>':`${up?"▲":"▼"} ${deltaLabel(d)} <span class="vs">vs prev ${window}d</span>`}</div>`
+      +(t.hint?`<div class="hint">${t.hint}</div>`:"")));
   });
   root.appendChild(kp);
 
-  // progress-since-baseline strip (live, computed from the data)
+  // "since the budget increase" strip: the full days since the change against
+  // the same number of full days immediately before it, so the two sides are
+  // always like for like. (The old version compared against every day before
+  // the baseline that happened to be inside the 90-day feed, which shrank to
+  // nothing once the feed rolled past the baseline date.)
   if(cfg.baseline){
-    const after=full.filter(d=>d.date>=cfg.baseline&&!d.partial);
-    const before=full.filter(d=>d.date<cfg.baseline);
+    const after=complete.filter(d=>d.date>=cfg.baseline);
+    const before=complete.filter(d=>d.date<cfg.baseline).slice(-after.length);
     if(after.length&&before.length){
-      const bl=dayLabel(cfg.baseline);
+      const bl=dayLabel(cfg.baseline), n=after.length, testLen=cfg.baselineDays||0;
       const cplA=sum(after,"conv")?sum(after,"cost")/sum(after,"conv"):0, cplB=sum(before,"conv")?sum(before,"cost")/sum(before,"conv"):0;
       const items=[
+        {label:"Spend",cur:sum(after,"cost"),prev:sum(before,"cost"),fmt:money,goodUp:true,neutral:true},
         {label:"Conversions",cur:sum(after,"conv"),prev:sum(before,"conv"),fmt:int,goodUp:true},
-        {label:"Cost / conv.",cur:cplA,prev:cplB,fmt:money2,goodUp:false},
-        {label:"Clicks",cur:sum(after,"clicks"),prev:sum(before,"clicks"),fmt:int,goodUp:true},
-        {label:"Spend",cur:sum(after,"cost"),prev:sum(before,"cost"),fmt:money,goodUp:true} ];
-      root.appendChild(el("div","subhead",`Progress since ${bl} <span>— since we changed the account, vs the prior period</span>`));
-      const row=el("div","kpis");
+        {label:"Conversions / day",cur:sum(after,"conv")/n,prev:sum(before,"conv")/before.length,fmt:v=>v.toFixed(1),goodUp:true},
+        {label:"Cost / conv.",cur:cplA,prev:cplB,fmt:money2,goodUp:false} ];
+      if(adsHasValue()){
+        items.push({label:"Booking value",cur:sum(after,"revVal"),prev:sum(before,"revVal"),fmt:money,goodUp:true});
+        items.push({label:"ROAS",cur:adsRoas(after),prev:adsRoas(before),fmt:roasFmt,goodUp:true});
+      }
+      const dayNote=testLen?`day ${Math.min(n,testLen)} of the ${testLen}-day test`:`${n} full days`;
+      root.appendChild(el("div","subhead",`Since ${cfg.baselineLabel||"the change"} on ${bl} <span>— ${dayNote}, against the ${before.length} days before it</span>`));
+      const row=el("div","kpis"+(items.length>4?" six":""));
       items.forEach(t=>{const d=chg(t.cur,t.prev),up=d>=0,good=t.goodUp?up:!up;
-        row.appendChild(el("div","tile",`<div class="label">${t.label}</div><div class="value">${t.fmt(t.cur)}</div><div class="delta ${good?"up":"down"}">${up?"▲":"▼"} ${deltaLabel(d)} <span class="vs">since ${bl}</span></div>`));});
+        row.appendChild(el("div","tile",`<div class="label">${t.label}</div><div class="value">${t.fmt(t.cur)}</div><div class="delta ${t.neutral?"":(good?"up":"down")}">${d===null?'<span class="vs">—</span>':`${up?"▲":"▼"} ${deltaLabel(d)} <span class="vs">vs the ${before.length} days before</span>`}</div>`));});
       root.appendChild(row);
+      // dated caveat, shown only while the comparison window overlaps it
+      const cv=cfg.baselineCaveat;
+      if(cv && before.some(d=>d.date>=cv.from&&d.date<=cv.to)) root.appendChild(el("div","tnote",cv.text));
     }
   }
 
@@ -381,15 +527,26 @@ function buildSection(cfg,full,window){
   a.innerHTML=`<div class="h">What this means</div><p>${cfg.analyze(cur,prev,window)}</p>`;
   root.appendChild(a);
 
+  // the questions the client asks on every call, answered from the data
+  if(cfg.key==="ads") renderAdsFAQ(root,cfg,complete,cur,prev,window);
+
+  // plain-English definitions, collapsed by default
+  if(cfg.explainer){
+    const ex=el("details","explain");
+    ex.innerHTML=`<summary><span class="q">?</span>How to read these numbers<span class="hintt">tap to open</span></summary><dl>${cfg.explainer().map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join("")}</dl>`;
+    root.appendChild(ex);
+  }
+
+  const charts=cfg.charts.filter(c=>!c.when||c.when());
   const g2=el("div","grid2"); const svgs=[];
-  cfg.charts.filter(c=>!c.wide).forEach(c=>{
+  charts.filter(c=>!c.wide).forEach(c=>{
     const card=el("div","card",`<h3>${c.title}</h3><p class="cap">${c.cap}</p>`);
     const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
     svg.setAttribute("class","chart"); svg.setAttribute("viewBox","0 0 520 250");
     card.appendChild(svg); g2.appendChild(card); svgs.push({c,svg});
   });
   root.appendChild(g2);
-  cfg.charts.filter(c=>c.wide).forEach(c=>{
+  charts.filter(c=>c.wide).forEach(c=>{
     const card=el("div","card",`<h3>${c.title}</h3><p class="cap">${c.cap}</p>`);
     const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
     svg.setAttribute("class","chart"); svg.setAttribute("viewBox","0 0 1080 230");
@@ -425,6 +582,8 @@ function renderWoW(root){
     {label:"Ad spend", src:"ads", fn:r=>sum(r,"cost"), fmt:money, goodUp:true},
     {label:"Ads conversions", src:"ads", fn:r=>sum(r,"conv"), fmt:v=>v.toFixed(0), goodUp:true},
     {label:"Cost / conv.", src:"ads", fn:r=>{const c=sum(r,"cost"),v=sum(r,"conv");return v?c/v:0;}, fmt:money2, goodUp:false},
+    {label:"Ads booking value", src:"ads", fn:r=>sum(r,"revVal"), fmt:money, goodUp:true, when:adsHasValue},
+    {label:"Ads ROAS", src:"ads", fn:adsRoas, fmt:roasFmt, goodUp:true, when:adsHasValue},
     {label:"Website sessions", src:"analytics", fn:r=>sum(r,"sessions"), fmt:int, goodUp:true},
     {label:"Key events (GA4)", src:"analytics", fn:r=>sum(r,"keyev"), fmt:int, goodUp:true},
     {label:"Search clicks", src:"search", fn:r=>sum(r,"clicks"), fmt:int, goodUp:true},
@@ -432,7 +591,7 @@ function renderWoW(root){
   ];
   const complete=k=>(DATA[k]||[]).filter(d=>!d.partial);
   let body="";
-  items.forEach(m=>{
+  items.filter(m=>!m.when||m.when()).forEach(m=>{
     const arr=complete(m.src);
     if(arr.length<14){ body+=`<tr><td>${m.label}</td><td>—</td><td>—</td><td>—</td></tr>`; return; }
     const cur=m.fn(arr.slice(-7)), prev=m.fn(arr.slice(-14,-7)), d=chg(cur,prev);
@@ -445,36 +604,161 @@ function renderWoW(root){
   const card=el("div","card");
   var extra="";
   if(ANALYSIS && ANALYSIS.change && ANALYSIS.change.total)
-    extra=`<div class="tnote"><b>What we changed:</b> ${ANALYSIS.change.total.toLocaleString()} account changes logged in the last 14 days — see the Google Ads change log below.</div>`;
+    extra=`<div class="tnote"><b>What we changed:</b> ${ANALYSIS.change.total>=9999?"9,999+":ANALYSIS.change.total.toLocaleString()} account changes logged in the last 14 days — see "Work on the account" in the Google Ads section.</div>`;
   card.innerHTML=`<div class="tablewrap"><table><thead><tr><th>Metric</th><th>This week</th><th>Last week</th><th>Change</th></tr></thead><tbody>${body}</tbody></table></div>${extra}`;
   root.appendChild(card);
 }
 
+/* "The questions you usually ask": one card per question Luke and Jeremy raise
+   on the weekly call, each answered in two or three computed bullets. Every
+   figure comes from the same data as the tiles, so the answers cannot drift
+   from the board. */
+function renderAdsFAQ(root,cfg,complete,cur,prev,window){
+  const a=ANALYSIS, r=adsReturn30(a);
+  const cplOf=rows=>{const c=sum(rows,"cost"),v=sum(rows,"conv");return v?c/v:0;};
+  const w7=complete.slice(-7), p7=complete.slice(-14,-7);
+  const after=complete.filter(d=>d.date>=cfg.baseline), before=complete.filter(d=>d.date<cfg.baseline).slice(-after.length);
+  const hv=adsHasValue();
+  const cards=[];
+
+  // 1. How many jobs did Google Ads bring in?
+  {
+    const b=[];
+    if(r) b.push(`Last 30 days: <b>${int(r.bookConv)} jobs booked online</b> after an ad click, worth <b>${money(r.bookVal)}</b>, plus <b>${int(r.callConv)} phone calls</b> from ads whose outcome is not tracked yet.`);
+    if(after.length&&before.length) b.push(`Since the budget increase: <b>${(sum(after,"conv")/after.length).toFixed(1)} conversions a day</b>, against ${(sum(before,"conv")/before.length).toFixed(1)} a day in the ${before.length} days before.`);
+    b.push(`Jobs booked by phone or text after seeing an ad are not counted anywhere yet. CallRail will add them.`);
+    cards.push(["How many jobs did Google Ads bring in?",b]);
+  }
+  // 2. What did we get back for the spend?
+  {
+    const b=[];
+    if(hv){ const v=sum(cur,"revVal"), roas=adsRoas(cur); b.push(`Last ${window} days: <b>${money(sum(cur,"cost"))} spent</b>, <b>${money(v)} booked online</b>, a <b>${roasFmt(roas)}</b> return.`); }
+    else if(r&&r.spend) b.push(`Last 30 days: <b>${money(r.spend)} spent</b>, <b>${money(r.bookVal)} booked online</b>, a <b>${roasFmt(r.roas)}</b> return.`);
+    b.push(`That return counts <b>online bookings only</b>. With roughly 80% of jobs booked by phone or text, the true figure is higher; treat it as the floor.`);
+    b.push(`Cost per conversion (booking or call) is <b>${money2(cplOf(cur))}</b> over the last ${window} days${prev.length?`, ${chg(cplOf(cur),cplOf(prev))<=0?"down":"up"} from ${money2(cplOf(prev))}`:""}.`);
+    cards.push(["What did we get back for the spend?",b]);
+  }
+  // 3. How much is going to tint and PPF?
+  {
+    const b=[];
+    b.push(`There is <b>no separate tint or PPF campaign</b>. Those keywords sit inside Search and Performance Max, and Google spends where it expects the cheapest bookings.`);
+    if(a&&a.adgroups&&a.adgroups.length){
+      const g=svc=>a.adgroups.filter(x=>serviceOf(x.name)===svc);
+      const tot=x=>({cost:sum(x,"cost"),conv:sum(x,"conv")});
+      const t=tot(g("Window tint")), p=tot(g("Paint protection film")), all=sum(a.adgroups,"cost");
+      b.push(`Last 30 days on Search: tint <b>${money(t.cost)}</b> (${all?Math.round(t.cost/all*100):0}%) for ${t.conv.toFixed(0)} conversions; PPF <b>${money(p.cost)}</b> (${all?Math.round(p.cost/all*100):0}%) for ${p.conv.toFixed(0)}. Full split in <a href="#svc-split">Spend by service</a>.`);
+      b.push(`A small share means few affordable tint searches in the area right now, not a decision to skip the service. Tint keywords convert well when they do show.`);
+    } else {
+      b.push(`The exact dollars per service arrive with the next report update; until then the split by campaign below is the closest view.`);
+      b.push(`On the last check tint was about $70 of a month's spend, with a very high conversion rate on the few searches it found.`);
+    }
+    cards.push(["How much is going to tint and PPF?",b]);
+  }
+  // 4. Is this week better than last?
+  {
+    const b=[];
+    if(w7.length===7&&p7.length===7){
+      const c1=sum(w7,"conv"), c0=sum(p7,"conv"), k1=cplOf(w7), k0=cplOf(p7);
+      b.push(`Last 7 full days: <b>${int(c1)} conversions</b> at <b>${money2(k1)}</b> each, against ${int(c0)} at ${money2(k0)} the week before${arrow(chg(c1,c0),true)} on volume.`);
+      b.push(`Spend was <b>${money(sum(w7,"cost"))}</b> versus ${money(sum(p7,"cost"))}.`);
+    } else b.push(`Needs two full weeks of data.`);
+    b.push(`Google keeps adding conversions to a day for up to a week, so the newest days always read a little low at first.`);
+    cards.push(["Is this week better than last week?",b]);
+  }
+  // 5. Where did the money go: Brand, Search, Performance Max?
+  if(a&&a.campaigns&&a.campaigns.length){
+    const b=[]; const tc=a.total?a.total.cost:sum(a.campaigns,"cost"), tv=a.total?a.total.conv:sum(a.campaigns,"conv");
+    [...a.campaigns].sort((x,y)=>y.cost-x.cost).slice(0,3).forEach(c=>{
+      b.push(`<b>${shortCamp(c.name)}</b>: ${money(c.cost)} (${tc?Math.round(c.cost/tc*100):0}% of spend) for ${c.conv} conversions (${tv?Math.round(c.conv/tv*100):0}%) at ${money2(c.cpl)} each${a.hasCampaignValue&&c.value!=null?`, ${money(c.value)} booked online`:""}.`);
+    });
+    cards.push(["Where did the money go?",b]);
+  }
+  // 6. How is the budget test going?
+  if(after.length&&before.length){
+    const b=[]; const n=after.length, L=cfg.baselineDays||30;
+    b.push(`<b>Day ${Math.min(n,L)} of ${L}</b>. Spend is ${money(sum(after,"cost"))} over ${n} days, about <b>${money(sum(after,"cost")/n*30)} a month</b> at this pace.`);
+    b.push(`Conversions per day ${arrow(chg(sum(after,"conv")/n,sum(before,"conv")/before.length),true)} and cost per conversion ${arrow(chg(cplOf(after),cplOf(before)),false)} versus the ${before.length} days before.`);
+    if(cfg.baselineCaveat&&before.some(d=>d.date>=cfg.baselineCaveat.from&&d.date<=cfg.baselineCaveat.to)) b.push(`The "before" days include the 13 to 23 Aug tracking break, so the lift reads bigger than it really is.`);
+    cards.push(["How is the budget increase doing?",b]);
+  }
+  // 7. What is a 0.5 conversion, and the $50 on a call?
+  {
+    const per=r&&r.perCall?money(r.perCall):"$50";
+    cards.push(["What is a .5 conversion, and the "+per+" on a call?",[
+      `A <b>.5</b> is a phone call from an ad. Google weights a call as half a booking, so 4.5 conversions means, for example, 4 bookings and one call.`,
+      `The <b>${per}</b> is a flat placeholder Google puts on some calls. It is not money that arrived, so it is <b>never</b> counted in booking value or the return figure.`,
+      `Once CallRail tags each call as booked or not, the real job value replaces the placeholder.`]]);
+  }
+
+  root.appendChild(el("div","subhead",`The questions you usually ask <span>— answered from the numbers on this page</span>`));
+  const grid=el("div","faq");
+  cards.forEach(([q,items])=>{ grid.appendChild(el("div","qa",`<h4><span class="qm">Q</span>${q}</h4><ul>${items.slice(0,3).map(t=>`<li>${t}</li>`).join("")}</ul>`)); });
+  root.appendChild(grid);
+}
+
 function renderPriorities(root){
-  const h=el("div","section-h"); h.innerHTML=`<h2>Priorities</h2><span class="note">Google Ads — from the latest account review</span>`;
+  const h=el("div","section-h"); h.innerHTML=`<h2>Priorities</h2><span class="note">Google Ads — worked out from the last 30 days of account data</span>`;
   root.appendChild(h);
-  const phoneActions = ANALYSIS && ANALYSIS.conv ? ANALYSIS.conv.filter(c=>c.category==="PHONE_CALL_LEAD") : [];
-  const phoneConv = phoneActions.reduce((s,c)=>s+c.conversions,0);
-  const phoneVal = phoneActions.reduce((s,c)=>s+c.value,0);
-  const phoneHasValue = phoneConv > 0 && phoneVal > 0;
-  const wins=[
-    "Cost per lead is trending down — account efficiency is improving.",
-    "Brand campaign is the most efficient in the account (lowest cost per lead).",
-    "Performance Max cost per lead is well below the account's historical average." ];
-  if(phoneHasValue) wins.push(`Phone-call conversion value is now set (${phoneConv} calls carrying ${money(phoneVal)} in value).`);
-  const watch=[];
-  watch.push(
-    {p:"P0",t:"Desktop cost-per-lead well above mobile",d:"Desktop converts far less efficiently. Apply device bid adjustments to cut wasted spend — the fastest efficiency win."},
-    {p:"P1",t:"Auto-Apply recommendations still on",d:"Google is auto-applying changes to the account. Review and disable unwanted automations."}
-  );
+  const a=ANALYSIS, r30=adsReturn30(a);
+  const ads=(DATA.ads||[]).filter(d=>!d.partial);
+  const cur=ads.slice(-30), prev=ads.slice(-60,-30);
+  const cpl=rows=>{const c=sum(rows,"cost"),v=sum(rows,"conv");return v?c/v:0;};
+  const wins=[], watch=[];
+
+  // wins
+  if(prev.length>=20){
+    const dConv=chg(sum(cur,"conv"),sum(prev,"conv")), dCpl=chg(cpl(cur),cpl(prev));
+    if(dConv!==null&&dConv>=10) wins.push(`<b>${int(sum(cur,"conv"))} conversions</b> in the last 30 days, up ${deltaLabel(dConv)} on the 30 days before.`);
+    if(dCpl!==null&&dCpl<=-10) wins.push(`Cost per conversion is down ${deltaLabel(dCpl)} to <b>${money2(cpl(cur))}</b>: each booking or call is costing less.`);
+    else if(dCpl!==null&&dCpl>=15) watch.push({p:"P1",t:"Cost per conversion is rising",d:`Up ${deltaLabel(dCpl)} to ${money2(cpl(cur))} versus the previous 30 days. Expected while the budget increase buys auctions we were not in before; we watch that it settles.`});
+  }
+  if(r30&&r30.spend&&r30.bookVal) wins.push(`Online bookings from ads are worth <b>${money(r30.bookVal)}</b> on ${money(r30.spend)} of spend, a <b>${roasFmt(r30.roas)}</b> return before any phone bookings.`);
+  if(a&&a.campaigns&&a.campaigns.length){
+    const enabled=a.campaigns.filter(c=>c.status==="ENABLED"&&c.conv>0);
+    const best=[...enabled].sort((x,y)=>x.cpl-y.cpl)[0];
+    if(best) wins.push(`<b>${best.name.replace(/\s*\(.*?\)\s*/g,"")}</b> is the most efficient campaign at ${money2(best.cpl)} per conversion.`);
+  }
+
+  // watch-items
+  if(r30&&r30.callConv>0){
+    const share=r30.totConv?Math.round(r30.callConv/r30.totConv*100):0;
+    watch.push({p:"P0",t:"Phone calls from ads carry no real value yet",d:`${int(r30.callConv)} of ${int(r30.totConv)} conversions (${share}%) were phone calls, counted at ${r30.perCall?money(r30.perCall)+" each as a placeholder":"$0"}. Until CallRail tags which calls booked, the return above is a floor, not the real number.`});
+  }
+  if(a&&a.devices){
+    const desk=a.devices.find(d=>d.device==="DESKTOP"), mob=a.devices.find(d=>d.device==="MOBILE");
+    if(desk&&mob&&desk.cpl&&mob.cpl&&desk.cpl>mob.cpl*1.3&&desk.cost>200)
+      watch.push({p:"P1",t:"Desktop cost per lead well above mobile",d:`Desktop is ${money2(desk.cpl)} per conversion against ${money2(mob.cpl)} on mobile. Device bid adjustments are the quickest fix.`});
+  }
+  if(a&&a.change&&a.change.autoApply>0)
+    watch.push({p:"P1",t:"Google Auto-Apply is changing the account",d:`${a.change.autoApply} automated changes in the last 14 days. We review and switch off the ones we do not want.`});
+  if(cur.length>=7){
+    const last7=cur.slice(-7), zeroDays=last7.filter(d=>d.cost>20&&d.conv===0).length;
+    if(zeroDays>=3) watch.push({p:"P0",t:"Possible conversion-tracking gap",d:`${zeroDays} of the last 7 days show spend with no conversions. That pattern last time was a tracking fault, not a performance drop, so we check it first.`});
+  }
+  if(!wins.length) wins.push("Nothing stands out yet: the comparison needs at least 20 days on each side.");
+  if(!watch.length) watch.push({p:"P2",t:"Nothing flagged",d:"No efficiency or tracking issue in the last 30 days of account data."});
+
   const box=el("div","priorities");
   box.innerHTML=`<div class="pcol"><div class="ph win">Wins</div>${wins.map(w=>`<div class="pitem"><span class="pdot"></span><span>${w}</span></div>`).join("")}</div>`
    +`<div class="pcol"><div class="ph watch">Watch-items</div>${watch.map(w=>`<div class="pitem"><span class="pbadge ${w.p.toLowerCase()}">${w.p}</span><span><b>${w.t}.</b> ${w.d}</span></div>`).join("")}</div>`;
   root.appendChild(box);
 }
 
-/* ---- manual revenue import: Billed (1).csv ---- */
+/* ---- revenue history: Billed (1).csv (manual export, pre-cutover) ---- */
 const REVENUE_CSV = "Billed%20(1).csv";
+
+/* ---- revenue live feed: published `fieldd_revenue` tab, one row per sale,
+        written by the Zapier "New Sales Receipt" Zap. Columns Date | Paid
+        Amount | Source. Leave "" until the tab is published; the dashboard
+        then runs on history alone, exactly as before. ---- */
+const FIELDD_LIVE_CSV = "";
+
+/* First date the live feed is trusted for, "YYYY-MM-DD". History is used for
+   everything before it, the live feed for everything from it onward.
+   Set this to the first FULL day the Zap ran, and make sure Billed (1).csv is
+   refreshed through the day before. Leave "" and the live feed is ignored
+   entirely, however much data is sitting in it. */
+const REVENUE_CUTOVER = "";
 const REVENUE_SNAPSHOT = `"Job Completed On","Total Billed"
 "12th May","$7,793.05"
 "13th May","$6,154.39"
@@ -500,87 +784,102 @@ const REVENUE_SNAPSHOT = `"Job Completed On","Total Billed"
 "2nd Jun","$7,154.34"
 "3rd Jun","$5,769.13"
 "4th Jun","$6,387.17"
-"5th Jun","$7,975.41"
-"6th Jun","$4,131.04"
-"7th Jun","$4,934.08"
-"8th Jun","$5,777.05"
-"9th Jun","$6,151.30"
-"10th Jun","$5,213.80"
-"11th Jun","$6,729.87"
-"12th Jun","$5,547.19"
-"13th Jun","$5,250.59"
-"14th Jun","$4,596.59"
-"15th Jun","$6,133.05"
-"16th Jun","$8,137.53"
-"17th Jun","$4,910.60"
-"18th Jun","$7,443.91"
-"19th Jun","$5,018.60"
-"20th Jun","$5,182.50"
-"21st Jun","$5,462.01"
-"22nd Jun","$4,700.20"
-"23rd Jun","$4,493.00"
-"24th Jun","$6,216.06"
-"25th Jun","$5,391.60"
-"26th Jun","$9,529.05"
-"27th Jun","$6,064.28"
-"28th Jun","$5,359.31"
-"29th Jun","$5,627.30"
-"30th Jun","$7,421.87"
-"1st Jul","$10,118.44"
-"2nd Jul","$7,326.04"
-"3rd Jul","$6,797.72"
-"4th Jul","$4,975.67"
-"5th Jul","$2,746.00"
-"6th Jul","$4,050.06"
-"7th Jul","$6,354.28"
-"8th Jul","$6,731.57"
-"9th Jul","$4,918.71"
-"10th Jul","$5,655.36"
-"11th Jul","$7,693.38"
-"12th Jul","$5,069.44"
-"13th Jul","$7,938.37"
-"14th Jul","$4,808.40"
-"15th Jul","$6,907.54"
-"16th Jul","$6,254.69"
-"17th Jul","$10,049.19"
-"18th Jul","$4,732.81"
-"19th Jul","$3,452.55"
-"20th Jul","$5,949.95"
-"21st Jul","$6,634.49"
-"22nd Jul","$7,730.01"
-"23rd Jul","$4,446.06"
-"24th Jul","$4,708.38"
-"25th Jul","$4,728.07"
-"26th Jul","$4,809.49"
-"27th Jul","$4,358.01"
-"28th Jul","$9,033.16"
-"29th Jul","$5,259.76"
-"30th Jul","$5,207.31"
-"31st Jul","$7,360.56"
-"1st Aug","$4,632.14"
-"2nd Aug","$4,232.60"
-"3rd Aug","$5,065.49"
-"4th Aug","$7,263.64"
-"5th Aug","$5,489.81"
-"6th Aug","$8,514.35"
-"7th Aug","$5,114.98"
-"8th Aug","$7,440.96"
-"9th Aug","$3,356.87"
-"10th Aug","$5,836.84"
-"11th Aug","$7,288.96"
-"12th Aug","$7,264.00"
-"13th Aug","$4,102.26"
-"14th Aug","$6,136.64"
-"15th Aug","$5,211.16"
-"16th Aug","$5,859.83"
-"17th Aug","$5,197.74"
-"18th Aug","$17,070.81"
-"19th Aug","$7,931.55"
-"20th Aug","$5,966.20"
-"21st Aug","$2,805.90"
-"22nd Aug","$2,864.10"
-"23rd Aug","$4,854.22"
-"24th Aug","$4,979.14"`;
+"5th Jun","$6,328.15"
+"6th Jun","$3,705.88"
+"7th Jun","$5,924.60"
+"8th Jun","$5,657.35"
+"9th Jun","$5,804.64"
+"10th Jun","$6,232.93"
+"11th Jun","$5,784.90"
+"12th Jun","$4,917.09"
+"13th Jun","$5,278.49"
+"14th Jun","$6,117.94"
+"15th Jun","$5,664.70"
+"16th Jun","$6,912.73"
+"17th Jun","$7,985.80"
+"18th Jun","$3,837.11"
+"19th Jun","$6,570.70"
+"20th Jun","$4,755.40"
+"21st Jun","$4,809.61"
+"22nd Jun","$4,411.80"
+"23rd Jun","$4,621.40"
+"24th Jun","$6,668.26"
+"25th Jun","$9,406.10"
+"26th Jun","$5,385.26"
+"27th Jun","$6,384.08"
+"28th Jun","$5,863.40"
+"29th Jun","$4,828.30"
+"30th Jun","$11,761.55"
+"1st Jul","$7,491.92"
+"2nd Jul","$6,222.98"
+"3rd Jul","$6,468.09"
+"4th Jul","$2,983.30"
+"5th Jul","$2,589.40"
+"6th Jul","$6,887.66"
+"7th Jul","$5,702.58"
+"8th Jul","$5,310.08"
+"9th Jul","$5,665.70"
+"10th Jul","$8,176.64"
+"11th Jul","$6,107.34"
+"12th Jul","$4,762.30"
+"13th Jul","$7,763.57"
+"14th Jul","$4,889.10"
+"15th Jul","$9,331.23"
+"16th Jul","$7,105.26"
+"17th Jul","$5,968.33"
+"18th Jul","$4,678.21"
+"19th Jul","$5,907.40"
+"20th Jul","$3,661.80"
+"21st Jul","$8,288.19"
+"22nd Jul","$5,540.91"
+"23rd Jul","$5,836.80"
+"24th Jul","$4,431.30"
+"25th Jul","$4,616.40"
+"26th Jul","$4,164.60"
+"27th Jul","$7,467.16"
+"28th Jul","$5,085.91"
+"29th Jul","$5,880.06"
+"30th Jul","$6,886.31"
+"31st Jul","$6,152.20"
+"1st Aug","$4,828.65"
+"2nd Aug","$4,674.51"
+"3rd Aug","$5,834.55"
+"4th Aug","$6,236.83"
+"5th Aug","$6,471.37"
+"6th Aug","$7,752.39"
+"7th Aug","$7,022.77"
+"8th Aug","$4,621.06"
+"9th Aug","$4,342.77"
+"10th Aug","$6,577.92"
+"11th Aug","$7,231.88"
+"12th Aug","$4,395.00"
+"13th Aug","$5,871.36"
+"14th Aug","$7,158.04"
+"15th Aug","$5,234.86"
+"16th Aug","$5,569.23"
+"17th Aug","$6,563.94"
+"18th Aug","$18,281.76"
+"19th Aug","$5,225.80"
+"20th Aug","$4,341.40"
+"21st Aug","$3,475.80"
+"22nd Aug","$5,029.22"
+"23rd Aug","$5,976.14"
+"24th Aug","$6,918.28"
+"25th Aug","$7,755.05"
+"26th Aug","$3,715.68"
+"27th Aug","$4,544.45"
+"28th Aug","$4,225.81"
+"29th Aug","$5,527.90"
+"30th Aug","$5,569.58"
+"31st Aug","$6,066.95"
+"1st Sep","$6,134.85"
+"2nd Sep","$8,771.10"
+"3rd Sep","$5,509.10"
+"4th Sep","$4,812.75"
+"5th Sep","$5,688.00"
+"6th Sep","$3,170.00"
+"7th Sep","$1,722.40"
+`;
 
 /* ---- section configs (with analysis writers) ---- */
 const CONFIGS=[
@@ -592,7 +891,7 @@ const CONFIGS=[
       {label:"Best day",key:"revenue",fmt:money,goodUp:true,val:r=>Math.max(0,...r.map(d=>d.revenue||0))},
       {label:"7-day avg",key:"revenue",fmt:money,goodUp:true,val:r=>avg(r.slice(-7),"revenue")} ],
     charts:[
-      {key:"revenue",title:"Daily billed revenue",cap:"Manual Fieldd export — dashed line shows the revenue trend",color:"--series-5",fmt:money,unit:"billed",wide:true,trend:true} ],
+      {key:"revenue",title:"Daily billed revenue",cap:"Fieldd billed revenue. Dashed line shows the revenue trend.",color:"--series-5",fmt:money,unit:"billed",wide:true,trend:true} ],
     columns:[ {label:"Date",key:"label"},{label:"Total billed",key:"revenue",fmt:money2} ],
     analyze:(cur,prev,w)=>{
       const rev=sum(cur,"revenue"), daily=avg(cur,"revenue"), last7=avg(cur.slice(-7),"revenue");
@@ -603,30 +902,58 @@ const CONFIGS=[
         + (prev.length?` Versus the previous ${w} days, total billed is${arrow(dRev,true)} and the 7-day average is${arrow(dAvg,true)}.`:"");
     } },
 
-  { key:"ads", title:"Google Ads", color:"--series-1", baseline:"2026-05-28", hideTable:true, breakdown:true,
-    colmap:{clicks:"clicks", conv:"conversions", cpl:"cost / conv", cost:"cost"},
+  { key:"ads", title:"Google Ads", color:"--series-1", hideTable:true, breakdown:true,
+    baseline:"2026-08-20", baselineLabel:"the budget increase", baselineDays:30,
+    baselineCaveat:{from:"2026-08-13",to:"2026-08-23",text:"The comparison days include 13 to 23 Aug, when conversion tracking was broken and clicks were not being counted as conversions. The conversion lift above therefore reads higher than it really is; spend and clicks are unaffected."},
+    colmap:{clicks:"clicks", conv:"conversions", cpl:"cost / conv", cost:"cost", revVal:"revenue value", leadVal:"lead value"},
     tiles:[
       {label:"Spend",key:"cost",fmt:money,goodUp:true,val:r=>sum(r,"cost")},
-      {label:"Conversions",key:"conv",fmt:int,goodUp:true,val:r=>sum(r,"conv")},
+      {label:"Conversions",key:"conv",fmt:int,goodUp:true,val:r=>sum(r,"conv"),hint:"online bookings + phone calls"},
       {label:"Cost / conv.",key:"cpl",fmt:money2,goodUp:false,val:r=>{const c=sum(r,"cost"),v=sum(r,"conv");return v?c/v:0;}},
+      {label:"Booking value",key:"revVal",fmt:money,goodUp:true,val:r=>sum(r,"revVal"),when:adsHasValue,hint:"online bookings only"},
+      {label:"ROAS",key:"roas",fmt:roasFmt,goodUp:true,val:adsRoas,when:adsHasValue,hint:"booking value ÷ spend"},
       {label:"Clicks",key:"clicks",fmt:int,goodUp:true,val:r=>sum(r,"clicks")} ],
     charts:[
-      {key:"conv",title:"Conversions",cap:"Leads from Google Ads",color:"--series-1",fmt:int,unit:"conversions"},
-      {key:"cpl",title:"Cost per conversion (CPL trend)",cap:"Lower is better — this is coming down",color:"--series-4",fmt:v=>"$"+Math.round(v),unit:"CPL",wide:true} ],
+      {key:"conv",title:"Conversions per day",cap:"Online bookings and phone calls from ads. A .5 is a phone call, which Google counts as half.",color:"--series-1",fmt:int,unit:"conversions"},
+      {key:"cost",title:"Spend per day",cap:"What Google charged each day",color:"--series-3",fmt:money,unit:"spend"},
+      {key:"cpl",title:"Cost per conversion",cap:"Lower is better. Spend for the day divided by conversions that day.",color:"--series-4",fmt:v=>"$"+Math.round(v),unit:"per conversion",wide:true},
+      {key:"revVal",title:"Online booking value per day",cap:"Dollar value of bookings made online after an ad click. Phone bookings are not in here yet.",color:"--series-2",fmt:money,unit:"booked",wide:true,when:adsHasValue} ],
     columns:[ {label:"Date",key:"label"},{label:"Spend",key:"cost",fmt:money},{label:"Clicks",key:"clicks",fmt:int},
               {label:"Conversions",key:"conv",fmt:v=>v.toFixed(0)},{label:"Cost / conv.",key:"cpl",fmt:money2} ],
+    explainer:()=>{
+      const r=adsReturn30();
+      const perCall=r&&r.perCall?money(r.perCall):"$50";
+      const ex=r&&r.roas?r.roas:1.75, exS=ex.toFixed(2);
+      return [
+        ["Conversion","One person who did something we asked for after clicking an ad: <b>booked online</b>, or <b>phoned</b> from the ad or the landing page. A <b>.5</b> in the daily numbers is a phone call, which Google weights as half a booking."],
+        ["Cost per conversion (CPL)","Spend divided by conversions. What one booking-or-call cost us on average. <b>Lower is better.</b>"],
+        ["Booking value","The real dollar amount of jobs booked online after an ad click, straight from the booking. It does <b>not</b> include jobs booked by phone or text, which is most of the business."],
+        ["ROAS","Return on ad spend: booking value divided by spend. <b>"+exS+"x</b> means $"+exS+" booked online for every $1 spent. Because phone bookings are missing, treat it as the <b>floor</b>, not the real return."],
+        ["Phone-call value","Google puts a flat <b>"+perCall+"</b> placeholder on some calls. That is not money that arrived, so it is <b>never</b> counted in booking value or ROAS. CallRail will replace it with what each call actually booked."],
+        ["Brand / Search / Performance Max","<b>Brand</b>: people already searching for Smith Bros by name, cheap and high-converting. <b>Search</b>: people searching for detailing, tint, PPF or ceramic in the service area. <b>Performance Max</b>: Google's automated placements across Search, Maps, YouTube and the web. Tint and PPF keywords live inside Search and Performance Max; there is no separate tint campaign."],
+        ["Dashed line / today","The newest day is still collecting and shows dashed. Google also keeps adding conversions to a day for up to a week after it, so the last few days always read a little low."]
+      ];
+    },
     analyze:(cur,prev,w)=>{
       const spend=sum(cur,"cost"),conv=sum(cur,"conv"),clicks=sum(cur,"clicks"),cpl=conv?spend/conv:0;
       const dConv=chg(conv,sum(prev,"conv")), dCpl=chg(cpl, sum(prev,"conv")?sum(prev,"cost")/sum(prev,"conv"):0);
       let read="";
       if(dConv!==null&&dCpl!==null){
-        if(dConv>=0&&dCpl<=0) read="That's an <b>efficient stretch</b> — more leads at a lower cost each.";
-        else if(dConv<0&&dCpl>0) read="Leads slowed and got more expensive — <b>worth a look</b> at which campaigns are driving cost.";
-        else if(dCpl>0) read="Leads held up but each one cost more — keep an eye on cost per conversion.";
-        else read="Cost per lead improved even as volume shifted — a good efficiency sign.";
+        if(dConv>=0&&dCpl<=0) read="That's an <b>efficient stretch</b>: more bookings and calls, at a lower cost each.";
+        else if(dConv<0&&dCpl>0) read="Bookings and calls slowed and got more expensive, so we look at which campaigns are driving cost.";
+        else if(dCpl>0) read="Volume held up but each conversion cost more. Expected while the higher budget buys auctions we were not in before; we watch that it settles.";
+        else read="Cost per conversion improved even as volume shifted, a good efficiency sign.";
       }
-      return `In the last <b>${w} days</b>, SB Mobile Detailing spent <b>${money(spend)}</b> on Google Ads and generated <b>${int(conv)} conversions</b> from ${int(clicks)} clicks, at an average <b>${money2(cpl)}</b> per conversion.`
-        + (prev.length?` Versus the previous ${w} days, conversions are${arrow(dConv,true)} and cost per conversion is${arrow(dCpl,false)}. ${read}`:"");
+      let ret="";
+      if(adsHasValue()){
+        const v=sum(cur,"revVal"), roas=adsRoas(cur), dRoas=chg(roas,adsRoas(prev));
+        ret=` Those conversions include online bookings worth <b>${money(v)}</b>, a <b>${roasFmt(roas)}</b> return on the spend${prev.length?arrow(dRoas,true):""}, before any phone bookings are counted.`;
+      } else {
+        const r=adsReturn30();
+        if(r&&r.spend) ret=` Over the last 30 days those conversions were <b>${int(r.bookConv)} online bookings worth ${money(r.bookVal)}</b> and <b>${int(r.callConv)} phone calls</b>. Booking value alone returned <b>${roasFmt(r.roas)}</b> the ad spend; phone bookings are on top of that once CallRail reports them.`;
+      }
+      return `In the last <b>${w} days</b>, SB Mobile Detailing spent <b>${money(spend)}</b> on Google Ads and got <b>${int(conv)} conversions</b> (online bookings plus phone calls) from ${int(clicks)} clicks, at <b>${money2(cpl)}</b> each.`
+        + (prev.length?` Versus the previous ${w} days, conversions are${arrow(dConv,true)} and cost per conversion is${arrow(dCpl,false)}. ${read}`:"") + ret;
     } },
 
   { key:"analytics", title:"Google Analytics (GA4)", color:"--series-2",
@@ -721,21 +1048,27 @@ let ANALYSIS=null;
 
 function parseAnalysis(text){
   const rows=parseCSV(text.trim());
-  const out={generated:"",campaigns:[],total:null,devices:[],conv:[],change:{total:0,autoApply:0,byType:[]}};
+  const out={generated:"",campaigns:[],total:null,devices:[],conv:[],adgroups:[],hasCampaignValue:false,change:{total:0,autoApply:0,byType:[]}};
   let mode="";
+  const hasVal=r=>r.length>9 && String(r[9]).trim()!=="";
   for(const r of rows){
     const a=(r[0]||"").trim();
     if(a==="Generated"){ out.generated=(r[1]||"").trim(); continue; }
     if(a.startsWith("CAMPAIGN KPIs")){mode="camp";continue;}
     if(a.startsWith("DEVICE SPLIT")){mode="dev";continue;}
     if(a.startsWith("CONVERSION ACTIONS")){mode="conv";continue;}
+    if(a.startsWith("AD GROUPS")){mode="adg";continue;}
     if(a.startsWith("CHANGE HISTORY")){mode="chg";continue;}
-    if(a==="Campaign"||a==="Device"||a==="Action"||a==="By user"||a==="By change type"){continue;}
-    if(!a){continue;}
+    if(a==="Campaign"||a==="Device"||a==="Action"||a==="Ad group"||a==="By user"||a==="By change type"){continue;}
+    if(!a||a.startsWith("(")){continue;}   // "(... query needs a tweak ...)" rows are notes, not data
     if(mode==="camp"){
-      if(a==="ACCOUNT TOTAL") out.total={clicks:num(r[2]),impr:num(r[3]),cost:num(r[4]),conv:num(r[5]),cpl:num(r[6]),ctr:num(r[7]),cvr:num(r[8])};
-      else out.campaigns.push({name:a,status:(r[1]||"").trim(),clicks:num(r[2]),impr:num(r[3]),cost:num(r[4]),conv:num(r[5]),cpl:num(r[6]),ctr:num(r[7]),cvr:num(r[8])});
+      const row={clicks:num(r[2]),impr:num(r[3]),cost:num(r[4]),conv:num(r[5]),cpl:num(r[6]),ctr:num(r[7]),cvr:num(r[8]),
+                 value:hasVal(r)?num(r[9]):null, roas:hasVal(r)?num(r[10]):null};
+      if(hasVal(r)) out.hasCampaignValue=true;
+      if(a==="ACCOUNT TOTAL") out.total=row;
+      else out.campaigns.push(Object.assign({name:a,status:(r[1]||"").trim()},row));
     } else if(mode==="dev"){ out.devices.push({device:a,clicks:num(r[1]),cost:num(r[2]),conv:num(r[3]),cpl:num(r[4])}); }
+    else if(mode==="adg"){ out.adgroups.push({name:a,campaign:(r[1]||"").trim(),clicks:num(r[2]),impr:num(r[3]),cost:num(r[4]),conv:num(r[5]),cpl:num(r[6])}); }
     else if(mode==="conv"){ out.conv.push({action:a,category:(r[1]||"").trim(),conversions:num(r[2]),value:num(r[3])}); }
     else if(mode==="chg"){
       if(a==="Total events") out.change.total=num(r[1]);
@@ -746,52 +1079,116 @@ function parseAnalysis(text){
   return out;
 }
 
+/* Which service an ad group sells, from its name. Used to answer "how much
+   are we spending on tint / PPF". Anything unrecognised is mobile detailing. */
+const SERVICE_RULES=[
+  ["Window tint", /tint/i],
+  ["Paint protection film", /ppf|paint\s*protection|clear\s*bra|film/i],
+  ["Ceramic coating", /ceramic|coating/i],
+  ["Boat detailing", /boat|marine|yacht/i],
+  ["RV detailing", /\brv\b|motorhome|camper/i],
+  ["Fleet", /fleet|commercial/i],
+  ["Brand", /brand|smith\s*bros|sb\s*mobile/i],
+  ["Interior / odor", /interior|odou?r|smoke|pet/i],
+  ["Headlights", /headlight/i],
+];
+function serviceOf(name){ for(const [svc,rx] of SERVICE_RULES) if(rx.test(name)) return svc; return "Mobile detailing"; }
+const shortCamp = n => String(n).replace(/\s*\(.*?\)\s*/g,"").trim();
+
 function renderAdsBreakdown(root,a){
   const gen=(a.generated||"").split(" ")[0];
-  root.appendChild(el("div","subhead",`Account breakdown — last 30 days <span>${a.live?"· from the account report":`· snapshot ${gen}`}</span>`));
+  root.appendChild(el("div","subhead",`Where the money went — last 30 days <span>${a.live?"· from the account report":`· snapshot ${gen}`}</span>`));
 
-  // Conversions by value
-  const pConv=a.conv.filter(c=>c.category==="PURCHASE").reduce((s,c)=>s+c.conversions,0);
-  const pVal=a.conv.filter(c=>c.category==="PURCHASE").reduce((s,c)=>s+c.value,0);
-  const phConv=a.conv.filter(c=>c.category==="PHONE_CALL_LEAD").reduce((s,c)=>s+c.conversions,0);
-  const phVal=a.conv.filter(c=>c.category==="PHONE_CALL_LEAD").reduce((s,c)=>s+c.value,0);
-  const totConv=a.total?a.total.conv:(pConv+phConv);
-  const phPct=totConv?Math.round(phConv/totConv*100):0;
-  const phoneHasValue=phConv>0&&phVal>0;
-  const cv=el("div","card");
-  cv.innerHTML=`<h3>Conversions by value</h3><p class="cap">Revenue-generating vs unvalued — last 30 days</p>
-    <div class="splitrow"><div class="splitseg" style="flex:${pConv||1}"><span>Valued purchases</span><b>${pConv}</b></div>
-    <div class="splitseg ${phoneHasValue?'':'alt'}" style="flex:${phConv||1}"><span>Phone leads · ${phoneHasValue?'valued':'$0'}</span><b>${phConv}</b></div></div>
-    <div class="convgrid"><div><div class="k">Revenue-generating (valued)</div><div class="v">${pConv} conv · ${money(pVal)}</div></div>
-    <div><div class="k">Phone leads ${phoneHasValue?'(valued)':'(no value)'}</div><div class="v">${phConv} conv · ${money(phVal)}</div></div></div>
-    <div class="flagbox">${phoneHasValue
-      ? `✓ <b>Phone-call value is set.</b> ${phConv} of ${totConv} conversions (${phPct}%) are phone calls carrying <b>${money(phVal)}</b> in value.`
-      : `⚠ <b>${phConv} of ${totConv} conversions (${phPct}%)</b> are phone calls tracked at <b>$0</b>. Blended ROAS is understated and should not be headlined until phone leads carry a value.`}</div>`;
-  root.appendChild(cv);
+  // 1. What came back: bookings vs calls
+  const r=adsReturn30(a);
+  if(r){
+    const totConv=r.totConv||1;
+    const cv=el("div","card");
+    cv.innerHTML=`<h3>What the ${int(r.totConv)} conversions were</h3><p class="cap">Online bookings carry their real dollar value. Phone calls do not, yet.</p>
+      <div class="splitrow">
+        <div class="splitseg" style="flex:${r.bookConv||1}"><span>Booked online</span><b>${int(r.bookConv)}</b></div>
+        <div class="splitseg mid" style="flex:${r.callConv||1}"><span>Phone calls from ads</span><b>${int(r.callConv)}</b></div>
+        ${r.otherConv?`<div class="splitseg alt" style="flex:${r.otherConv}"><span>Other</span><b>${int(r.otherConv)}</b></div>`:""}
+      </div>
+      <div class="convgrid">
+        <div><div class="k">Online bookings</div><div class="v">${int(r.bookConv)} jobs · ${money(r.bookVal)}</div></div>
+        <div><div class="k">Return on spend (online only)</div><div class="v">${roasFmt(r.roas)} · ${money(r.bookVal)} on ${money(r.spend)}</div></div>
+        <div><div class="k">Phone calls from ads</div><div class="v">${int(r.callConv)} calls · value unknown</div></div>
+        <div><div class="k">Share of conversions by phone</div><div class="v">${Math.round(r.callConv/totConv*100)}%</div></div>
+      </div>
+      <div class="flagbox">${r.callConv
+        ? `<b>${int(r.callConv)} phone calls are not in the return figure.</b> Google puts a ${r.perCall?money(r.perCall)+" placeholder":"$0"} on them, which is not money that arrived, so we leave it out. With around 80% of jobs booked by phone or text, the real return on ads is higher than ${roasFmt(r.roas)}. CallRail is being wired up to tag which calls booked and for how much.`
+        : `Every conversion in this window carries a real booking value.`}</div>`;
+    root.appendChild(cv);
+  }
 
-  // Campaign performance
+  // 2. Campaigns, with share of spend and (when the report carries it) booking value
   const camps=[...a.campaigns].sort((x,y)=>y.cost-x.cost);
-  let ct=`<h3>Campaign performance</h3><p class="cap">CPL / CTR / CVR side by side — last 30 days</p><div class="tablewrap"><table><thead><tr><th>Campaign</th><th>Status</th><th>Spend</th><th>Conv</th><th>CPL</th><th>CTR</th><th>CVR</th></tr></thead><tbody>`;
-  camps.forEach(c=>{ ct+=`<tr><td>${c.name}</td><td><span class="stat ${c.status==='ENABLED'?'on':'off'}">${c.status||'—'}</span></td><td>${money(c.cost)}</td><td>${c.conv}</td><td>${money2(c.cpl)}</td><td>${c.ctr.toFixed(1)}%</td><td>${c.cvr.toFixed(1)}%</td></tr>`; });
-  if(a.total) ct+=`<tr class="totalrow"><td>Account total</td><td></td><td>${money(a.total.cost)}</td><td>${a.total.conv}</td><td>${money2(a.total.cpl)}</td><td>${a.total.ctr.toFixed(1)}%</td><td>${a.total.cvr.toFixed(1)}%</td></tr>`;
+  const totCost=a.total?a.total.cost:sum(camps,"cost"), totConv=a.total?a.total.conv:sum(camps,"conv");
+  const hv=a.hasCampaignValue;
+  let ct=`<h3>By campaign</h3><p class="cap">Where the budget went and what each campaign brought back. Share bars are of total spend.</p><div class="tablewrap"><table><thead><tr><th>Campaign</th><th>Spend</th><th>Share</th><th>Conv</th><th>Cost / conv</th>${hv?"<th>Booking value</th><th>ROAS</th>":""}<th>CTR</th><th>CVR</th></tr></thead><tbody>`;
+  camps.forEach(c=>{ const sh=totCost?c.cost/totCost*100:0;
+    ct+=`<tr><td>${shortCamp(c.name)}${c.status!=="ENABLED"?` <span class="stat off">${c.status}</span>`:""}</td><td>${money(c.cost)}</td><td class="barcell"><span class="bar"><i style="width:${sh.toFixed(0)}%"></i></span>${sh.toFixed(0)}%</td><td>${c.conv}</td><td>${money2(c.cpl)}</td>${hv?`<td>${money(c.value||0)}</td><td>${roasFmt(c.roas||0)}</td>`:""}<td>${c.ctr.toFixed(1)}%</td><td>${c.cvr.toFixed(1)}%</td></tr>`; });
+  if(a.total) ct+=`<tr class="totalrow"><td>Account total</td><td>${money(a.total.cost)}</td><td>100%</td><td>${a.total.conv}</td><td>${money2(a.total.cpl)}</td>${hv?`<td>${money(a.total.value||0)}</td><td>${roasFmt(a.total.roas||0)}</td>`:""}<td>${a.total.ctr.toFixed(1)}%</td><td>${a.total.cvr.toFixed(1)}%</td></tr>`;
   ct+=`</tbody></table></div>`;
-  const cc=el("div","card"); cc.innerHTML=ct; root.appendChild(cc);
+  const brand=camps.find(c=>/brand/i.test(c.name)), search=camps.find(c=>/search/i.test(c.name)), pmax=camps.find(c=>/performance\s*max|pmax/i.test(c.name));
+  let note=`<div class="campnote">`;
+  if(brand) note+=`<b>Brand</b> is people already searching for Smith Bros by name: ${totConv?Math.round(brand.conv/totConv*100):0}% of conversions for ${totCost?Math.round(brand.cost/totCost*100):0}% of spend. `;
+  if(search) note+=`<b>Search</b> is new customers searching for detailing, tint, PPF and ceramic in the service area, and is where most of the budget increase went. `;
+  if(pmax) note+=`<b>Performance Max</b> is Google's automated placements across Search, Maps, YouTube and the web. `;
+  note+=`There is no separate tint or PPF campaign: those keywords sit inside Search and Performance Max, so the split by service is below.`;
+  if(!hv) note+=` Booking value per campaign appears here once the updated Ads report is running.`;
+  note+=`</div>`;
+  const cc=el("div","card"); cc.innerHTML=ct+note; root.appendChild(cc);
 
-  // Device split
-  let dt=`<h3>Device split</h3><p class="cap">Cost per lead by device — the fastest efficiency lever</p><div class="tablewrap"><table><thead><tr><th>Device</th><th>Spend</th><th>Conv</th><th>CPL</th></tr></thead><tbody>`;
-  a.devices.filter(d=>d.cost>0).forEach(d=>{ dt+=`<tr><td>${d.device}</td><td>${money(d.cost)}</td><td>${d.conv}</td><td>${d.cpl?money2(d.cpl):'—'}</td></tr>`; });
+  // 3. Spend by service (from ad groups), the "how much went to tint" answer
+  const sc=el("div","card"); sc.id="svc-split";
+  if(a.adgroups&&a.adgroups.length){
+    const by={};
+    a.adgroups.forEach(g=>{ const k=serviceOf(g.name); if(!by[k]) by[k]={svc:k,cost:0,conv:0,clicks:0,impr:0,groups:[]};
+      by[k].cost+=g.cost; by[k].conv+=g.conv; by[k].clicks+=g.clicks; by[k].impr+=g.impr; by[k].groups.push(g.name); });
+    const rowsS=Object.values(by).sort((x,y)=>y.cost-x.cost);
+    const adgCost=sum(rowsS,"cost");
+    let st=`<h3>Spend by service</h3><p class="cap">Search campaigns only: Performance Max does not report by service. ${money(adgCost)} of the ${money(totCost)} total is covered here.</p><div class="tablewrap"><table><thead><tr><th>Service</th><th>Spend</th><th>Share</th><th>Conv</th><th>Cost / conv</th><th>Clicks</th><th>Ad groups</th></tr></thead><tbody>`;
+    rowsS.forEach(x=>{ const sh=adgCost?x.cost/adgCost*100:0;
+      st+=`<tr><td>${x.svc}</td><td>${money(x.cost)}</td><td class="barcell"><span class="bar"><i style="width:${sh.toFixed(0)}%"></i></span>${sh.toFixed(0)}%</td><td>${x.conv.toFixed(0)}</td><td>${x.conv?money2(x.cost/x.conv):"—"}</td><td>${int(x.clicks)}</td><td style="white-space:normal;text-align:right;color:var(--muted);font-size:12px">${x.groups.map(shortCamp).join(", ")}</td></tr>`; });
+    st+=`</tbody></table></div>`;
+    const tint=rowsS.find(x=>x.svc==="Window tint"), ppf=rowsS.find(x=>x.svc==="Paint protection film");
+    let tn="";
+    if(tint||ppf){
+      const parts=[];
+      if(tint) parts.push(`tint took <b>${money(tint.cost)}</b> (${adgCost?Math.round(tint.cost/adgCost*100):0}%) for ${tint.conv.toFixed(0)} conversions`);
+      if(ppf) parts.push(`PPF took <b>${money(ppf.cost)}</b> (${adgCost?Math.round(ppf.cost/adgCost*100):0}%) for ${ppf.conv.toFixed(0)} conversions`);
+      tn=`<div class="tnote">In the last 30 days ${parts.join("; ")}. Google spends where it expects the cheapest conversions, so a small share means few affordable searches, not a decision to skip the service.</div>`;
+    } else tn=`<div class="tnote">No tint or PPF ad group had spend in the last 30 days.</div>`;
+    sc.innerHTML=st+tn;
+  } else {
+    sc.className="pending";
+    sc.innerHTML=`<b>Coming next: spend by service.</b> How much of the budget went to window tint, PPF, ceramic and detailing. The account report is being extended to include it.`;
+  }
+  root.appendChild(sc);
+
+  // 4. Device split
+  let dt=`<h3>By device</h3><p class="cap">Cost per conversion on phones vs computers</p><div class="tablewrap"><table><thead><tr><th>Device</th><th>Spend</th><th>Conv</th><th>Cost / conv</th></tr></thead><tbody>`;
+  a.devices.filter(d=>d.cost>0).forEach(d=>{ dt+=`<tr><td>${d.device.charAt(0)+d.device.slice(1).toLowerCase().replace("_"," ")}</td><td>${money(d.cost)}</td><td>${d.conv}</td><td>${d.cpl?money2(d.cpl):'—'}</td></tr>`; });
   dt+=`</tbody></table></div>`;
   const desk=a.devices.find(d=>d.device==='DESKTOP'), mob=a.devices.find(d=>d.device==='MOBILE');
-  if(desk&&mob&&mob.cpl) dt+=`<div class="tnote">Desktop CPL is ${(desk.cpl/mob.cpl).toFixed(1)}× mobile (${money2(desk.cpl)} vs ${money2(mob.cpl)}) — device bid adjustments are the quickest efficiency win.</div>`;
+  if(desk&&mob&&mob.cpl&&desk.cpl){
+    const ratio=desk.cpl/mob.cpl;
+    if(ratio>1.3) dt+=`<div class="tnote">Desktop costs ${ratio.toFixed(1)}× more per conversion than mobile (${money2(desk.cpl)} vs ${money2(mob.cpl)}). Device bid adjustments are the quickest efficiency win.</div>`;
+    else if(ratio<0.77) dt+=`<div class="tnote">Desktop is currently the cheaper device (${money2(desk.cpl)} vs ${money2(mob.cpl)} on mobile), but mobile carries ${totCost?Math.round(mob.cost/totCost*100):0}% of spend and most of the volume, so both matter.</div>`;
+    else dt+=`<div class="tnote">Desktop and mobile are converting at a similar cost (${money2(desk.cpl)} vs ${money2(mob.cpl)}). Nothing to adjust here.</div>`;
+  }
   const dv=el("div","card"); dv.innerHTML=dt; root.appendChild(dv);
 
-  // Change history
+  // 5. Change history
   const topTypes=[...a.change.byType].sort((x,y)=>y.count-x.count).slice(0,3).map(t=>`${t.type.replace(/_/g,' ').toLowerCase()} ${t.count.toLocaleString()}`).join(" · ");
+  const capped=a.change.total>=9999;
   const ch=el("div","card");
-  ch.innerHTML=`<h3>Change history</h3><p class="cap">Work on the account — last 14 days</p>
-    <div class="convgrid"><div><div class="k">Total changes</div><div class="v">${a.change.total.toLocaleString()}</div></div>
-    <div><div class="k">Auto-Apply events</div><div class="v">${a.change.autoApply}${a.change.autoApply>0?' · still ON':''}</div></div></div>
-    <div class="tnote">Top change types: ${topTypes}.</div>`;
+  ch.innerHTML=`<h3>Work on the account</h3><p class="cap">Changes made in the last 14 days</p>
+    <div class="convgrid"><div><div class="k">Changes by our team</div><div class="v">${capped?"9,999+":a.change.total.toLocaleString()}</div></div>
+    <div><div class="k">Changes by Google Auto-Apply</div><div class="v">${a.change.autoApply}${a.change.autoApply>0?' · still ON':' · off'}</div></div></div>
+    <div class="tnote">${topTypes?`Mostly: ${topTypes}.`:""}${capped?" The report caps at 9,999 events, so the true count is higher: a full keyword and location rebuild went in on 24 Aug.":""}</div>`;
   root.appendChild(ch);
 }
 
@@ -889,11 +1286,17 @@ async function loadAll(){
   for(const cfg of CONFIGS){
     const url=SOURCES[cfg.key];
     if(cfg.key==="revenue"){
-      try{
-        if(url){ const res=await fetch(url); if(!res.ok) throw new Error("HTTP "+res.status);
-          DATA.revenue=shapeRevenue(await res.text()); anyLive=true; continue; }
-      }catch(e){ DATA.revenue=shapeRevenue(REVENUE_SNAPSHOT); continue; }
-      DATA.revenue=shapeRevenue(REVENUE_SNAPSHOT); continue;
+      let histText=REVENUE_SNAPSHOT;
+      if(url){ try{ const res=await fetch(url); if(res.ok) histText=await res.text(); }catch(e){} }
+      let liveText="";
+      if(FIELDD_LIVE_CSV){
+        try{ const res=await fetch(FIELDD_LIVE_CSV);
+             if(res.ok){ liveText=await res.text(); anyLive=true; }
+             else console.warn("revenue: live feed HTTP "+res.status);
+        }catch(e){ console.warn("revenue: live feed unreachable, history only"); }
+      }
+      DATA.revenue=shapeRevenue(histText, liveText, REVENUE_CUTOVER);
+      continue;
     }
     if(url){ try{ const res=await fetch(url); if(!res.ok) throw new Error("HTTP "+res.status);
       DATA[cfg.key]=shape(await res.text(),cfg.colmap); anyLive=true; continue; }
