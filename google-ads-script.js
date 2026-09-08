@@ -215,6 +215,55 @@ function writeAnalysisTab() {
   }
   out.push([]);
 
+  // KEYWORDS (what we bid on). Search and Brand only — Performance Max has no
+  // keyword-level reporting, so this covers part of the account, not all of it.
+  // Capped at 60 rows; the tail of a keyword list is noise on a client board.
+  out.push(["KEYWORDS (last 30 days, search campaigns only)"]);
+  out.push(["Keyword", "Match", "Campaign", "Clicks", "Impr", "Cost USD", "Conv", "CPL"]);
+  try {
+    var kq = AdsApp.report(
+      "SELECT ad_group_criterion.keyword.text, ad_group_criterion.keyword.match_type, campaign.name, " +
+      "metrics.clicks, metrics.impressions, metrics.cost_micros, metrics.conversions " +
+      "FROM keyword_view WHERE segments.date DURING LAST_30_DAYS AND metrics.cost_micros > 0 " +
+      "ORDER BY metrics.cost_micros DESC LIMIT 60").rows();
+    while (kq.hasNext()) {
+      var k = kq.next();
+      var kcost = (parseInt(k["metrics.cost_micros"], 10) || 0) / 1e6;
+      var kconv = parseFloat(k["metrics.conversions"]) || 0;
+      out.push([k["ad_group_criterion.keyword.text"], k["ad_group_criterion.keyword.match_type"],
+        k["campaign.name"], parseInt(k["metrics.clicks"], 10) || 0,
+        parseInt(k["metrics.impressions"], 10) || 0, round2(kcost), round2(kconv),
+        round2(kconv ? kcost / kconv : 0)]);
+    }
+  } catch (err3) {
+    out.push(["(keyword query needs a tweak: " + err3 + ")"]);
+  }
+  out.push([]);
+
+  // SEARCH TERMS (what people actually typed). Usually the more revealing half:
+  // it is where wasted spend and new keyword ideas show up. Google withholds
+  // low-volume terms for privacy, so the rows here never sum to total spend.
+  out.push(["SEARCH TERMS (last 30 days, what people actually typed)"]);
+  out.push(["Search term", "Campaign", "Clicks", "Impr", "Cost USD", "Conv", "CPL"]);
+  try {
+    var sq = AdsApp.report(
+      "SELECT search_term_view.search_term, campaign.name, metrics.clicks, metrics.impressions, " +
+      "metrics.cost_micros, metrics.conversions " +
+      "FROM search_term_view WHERE segments.date DURING LAST_30_DAYS AND metrics.cost_micros > 0 " +
+      "ORDER BY metrics.cost_micros DESC LIMIT 60").rows();
+    while (sq.hasNext()) {
+      var t = sq.next();
+      var tcost = (parseInt(t["metrics.cost_micros"], 10) || 0) / 1e6;
+      var tconv = parseFloat(t["metrics.conversions"]) || 0;
+      out.push([t["search_term_view.search_term"], t["campaign.name"],
+        parseInt(t["metrics.clicks"], 10) || 0, parseInt(t["metrics.impressions"], 10) || 0,
+        round2(tcost), round2(tconv), round2(tconv ? tcost / tconv : 0)]);
+    }
+  } catch (err4) {
+    out.push(["(search term query needs a tweak: " + err4 + ")"]);
+  }
+  out.push([]);
+
   // CHANGE HISTORY (best-effort — the change_event query is the one most likely to need a tweak)
   out.push(["CHANGE HISTORY (last 14 days)"]);
   try {

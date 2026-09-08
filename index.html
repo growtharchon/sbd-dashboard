@@ -1048,7 +1048,7 @@ let ANALYSIS=null;
 
 function parseAnalysis(text){
   const rows=parseCSV(text.trim());
-  const out={generated:"",campaigns:[],total:null,devices:[],conv:[],adgroups:[],hasCampaignValue:false,change:{total:0,autoApply:0,byType:[]}};
+  const out={generated:"",campaigns:[],total:null,devices:[],conv:[],adgroups:[],keywords:[],terms:[],hasCampaignValue:false,change:{total:0,autoApply:0,byType:[]}};
   let mode="";
   const hasVal=r=>r.length>9 && String(r[9]).trim()!=="";
   for(const r of rows){
@@ -1058,8 +1058,10 @@ function parseAnalysis(text){
     if(a.startsWith("DEVICE SPLIT")){mode="dev";continue;}
     if(a.startsWith("CONVERSION ACTIONS")){mode="conv";continue;}
     if(a.startsWith("AD GROUPS")){mode="adg";continue;}
+    if(a.startsWith("KEYWORDS")){mode="kw";continue;}
+    if(a.startsWith("SEARCH TERMS")){mode="term";continue;}
     if(a.startsWith("CHANGE HISTORY")){mode="chg";continue;}
-    if(a==="Campaign"||a==="Device"||a==="Action"||a==="Ad group"||a==="By user"||a==="By change type"){continue;}
+    if(a==="Campaign"||a==="Device"||a==="Action"||a==="Ad group"||a==="Keyword"||a==="Search term"||a==="By user"||a==="By change type"){continue;}
     if(!a||a.startsWith("(")){continue;}   // "(... query needs a tweak ...)" rows are notes, not data
     if(mode==="camp"){
       const row={clicks:num(r[2]),impr:num(r[3]),cost:num(r[4]),conv:num(r[5]),cpl:num(r[6]),ctr:num(r[7]),cvr:num(r[8]),
@@ -1069,6 +1071,8 @@ function parseAnalysis(text){
       else out.campaigns.push(Object.assign({name:a,status:(r[1]||"").trim()},row));
     } else if(mode==="dev"){ out.devices.push({device:a,clicks:num(r[1]),cost:num(r[2]),conv:num(r[3]),cpl:num(r[4])}); }
     else if(mode==="adg"){ out.adgroups.push({name:a,campaign:(r[1]||"").trim(),clicks:num(r[2]),impr:num(r[3]),cost:num(r[4]),conv:num(r[5]),cpl:num(r[6])}); }
+    else if(mode==="kw"){ out.keywords.push({text:a,match:(r[1]||"").trim(),campaign:(r[2]||"").trim(),clicks:num(r[3]),impr:num(r[4]),cost:num(r[5]),conv:num(r[6]),cpl:num(r[7])}); }
+    else if(mode==="term"){ out.terms.push({text:a,campaign:(r[1]||"").trim(),clicks:num(r[2]),impr:num(r[3]),cost:num(r[4]),conv:num(r[5]),cpl:num(r[6])}); }
     else if(mode==="conv"){ out.conv.push({action:a,category:(r[1]||"").trim(),conversions:num(r[2]),value:num(r[3])}); }
     else if(mode==="chg"){
       if(a==="Total events") out.change.total=num(r[1]);
@@ -1167,6 +1171,52 @@ function renderAdsBreakdown(root,a){
     sc.innerHTML=`<b>Coming next: spend by service.</b> How much of the budget went to window tint, PPF, ceramic and detailing. The account report is being extended to include it.`;
   }
   root.appendChild(sc);
+
+  // 3b. Keywords and search terms. Search and Brand only; PMax has neither, so
+  // both cards state what share of spend they actually cover.
+  const kwCost = a.keywords && a.keywords.length ? sum(a.keywords,"cost") : 0;
+  const kc=el("div","card"); kc.id="kw-split";
+  if(a.keywords && a.keywords.length){
+    const ks=[...a.keywords].sort((x,y)=>y.cost-x.cost);
+    const shown=ks.slice(0,20);
+    const conv=sum(ks,"conv");
+    let kt=`<h3>What we are spending on</h3><p class="cap">Top keywords by spend, last 30 days. Search and Brand only: Performance Max has no keywords. ${money(kwCost)} of the ${money(totCost)} total is covered here.</p><div class="tablewrap"><table><thead><tr><th>Keyword</th><th>Match</th><th>Spend</th><th>Share</th><th>Clicks</th><th>Conv</th><th>Cost / conv</th></tr></thead><tbody>`;
+    shown.forEach(k=>{ const sh=kwCost?k.cost/kwCost*100:0;
+      kt+=`<tr><td>${k.text}</td><td style="color:var(--muted)">${String(k.match||"").toLowerCase()}</td><td>${money(k.cost)}</td><td class="barcell"><span class="bar"><i style="width:${sh.toFixed(0)}%"></i></span>${sh.toFixed(0)}%</td><td>${int(k.clicks)}</td><td>${k.conv.toFixed(1)}</td><td>${k.conv?money2(k.cost/k.conv):"—"}</td></tr>`; });
+    kt+=`</tbody></table></div>`;
+    const dead=ks.filter(k=>k.conv===0);
+    const deadCost=sum(dead,"cost");
+    let kn=`<div class="tnote">These ${ks.length} keywords carried ${money(kwCost)} and produced ${conv.toFixed(0)} conversions.`;
+    if(dead.length) kn+=` <b>${dead.length}</b> of them spent ${money(deadCost)} (${kwCost?Math.round(deadCost/kwCost*100):0}%) without a single conversion, which is the first place to look for savings.`;
+    if(ks.length>shown.length) kn+=` Showing the top ${shown.length} by spend.`;
+    kn+=`</div>`;
+    kc.innerHTML=kt+kn;
+  } else {
+    kc.className="pending";
+    kc.innerHTML=`<b>Coming next: keyword spend.</b> Which keywords the budget went to, and which spent without converting. The account report is being extended to include it.`;
+  }
+  root.appendChild(kc);
+
+  const tc=el("div","card"); tc.id="term-split";
+  if(a.terms && a.terms.length){
+    const ts=[...a.terms].sort((x,y)=>y.cost-x.cost);
+    const shown=ts.slice(0,20);
+    const tCost=sum(ts,"cost");
+    let tt=`<h3>What people actually typed</h3><p class="cap">Top search terms by spend, last 30 days. Google withholds low-volume terms, so these never add up to the full spend.</p><div class="tablewrap"><table><thead><tr><th>Search term</th><th>Spend</th><th>Clicks</th><th>Conv</th><th>Cost / conv</th></tr></thead><tbody>`;
+    shown.forEach(t=>{ tt+=`<tr><td style="white-space:normal">${t.text}</td><td>${money(t.cost)}</td><td>${int(t.clicks)}</td><td>${t.conv.toFixed(1)}</td><td>${t.conv?money2(t.cost/t.conv):"—"}</td></tr>`; });
+    tt+=`</tbody></table></div>`;
+    const waste=ts.filter(t=>t.conv===0);
+    const wasteCost=sum(waste,"cost");
+    let tn=`<div class="tnote">This is the difference between what we bid on and what people really search. `;
+    if(waste.length) tn+=`<b>${waste.length}</b> of these terms spent ${money(wasteCost)} with no conversion; any that are plainly the wrong intent are negative-keyword candidates.`;
+    else tn+=`Every term listed converted at least once.`;
+    tn+=`</div>`;
+    tc.innerHTML=tt+tn;
+  } else {
+    tc.className="pending";
+    tc.innerHTML=`<b>Coming next: search terms.</b> The actual phrases people typed before clicking, and which of them wasted spend. The account report is being extended to include it.`;
+  }
+  root.appendChild(tc);
 
   // 4. Device split
   let dt=`<h3>By device</h3><p class="cap">Cost per conversion on phones vs computers</p><div class="tablewrap"><table><thead><tr><th>Device</th><th>Spend</th><th>Conv</th><th>Cost / conv</th></tr></thead><tbody>`;
