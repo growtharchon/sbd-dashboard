@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SB Mobile Detailing &mdash; Google Business Profile Review</title>
+<style>
+  :root {
+    --plane:#f9f9f7; --surface:#ffffff; --text-primary:#0b0b0b; --text-secondary:#52514e;
+    --muted:#898781; --grid:#e1e0d9; --baseline:#c3c2b7; --border:rgba(11,11,11,0.10);
+    --s1:#2a78d6; --s2:#1baf7a; --s3:#eda100; --s4:#4a3aa7; --total:#6f6e69;
+    --sm:#2a78d6; --cb:#eda100; --brand:#1baf7a; --disc:#4a3aa7;
+    --good:#006300; --bad:#c23b3b; --accent-wash:rgba(42,120,214,0.06);
+    --alert-wash:rgba(194,59,59,0.07);
+    --shadow:0 1px 2px rgba(11,11,11,0.04), 0 4px 16px rgba(11,11,11,0.04);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --plane:#0d0d0d; --surface:#1a1a19; --text-primary:#ffffff; --text-secondary:#c3c2b7;
+      --muted:#898781; --grid:#2c2c2a; --baseline:#383835; --border:rgba(255,255,255,0.10);
+      --s1:#3987e5; --s2:#199e70; --s3:#c98500; --s4:#9085e9; --total:#a3a19a;
+      --sm:#3987e5; --cb:#c98500; --brand:#199e70; --disc:#9085e9;
+      --good:#0ca30c; --bad:#e66767; --accent-wash:rgba(57,135,229,0.10);
+      --alert-wash:rgba(230,103,103,0.10);
+      --shadow:0 1px 2px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.3);
+    }
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; padding:0; scroll-behavior:smooth; }
+  body { background:var(--plane); color:var(--text-primary);
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif; line-height:1.45; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:1000px; margin:0 auto; padding:0 20px 60px; }
+  header.page { padding-top:32px; }
+  .brandrow { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
+  h1 { font-size:26px; margin:0; letter-spacing:-0.01em; }
+  .badge { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;
+    color:var(--bad); border:1px solid var(--border); border-radius:999px; padding:3px 10px; }
+  .sub { color:var(--text-secondary); font-size:14px; margin-top:6px; }
+  .source { color:var(--muted); font-size:12px; margin-top:3px; }
+
+  .verdict { background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--bad);
+    border-radius:14px; padding:18px 20px; margin:22px 0 8px; box-shadow:var(--shadow); }
+  .verdict .h { font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); margin-bottom:7px; }
+  .verdict p { margin:0 0 9px; font-size:15px; color:var(--text-secondary); line-height:1.58; }
+  .verdict p:last-child { margin-bottom:0; }
+  .verdict b { color:var(--text-primary); font-weight:650; }
+
+  .section-h { display:flex; align-items:center; gap:10px; margin:40px 0 4px; }
+  .section-h h2 { font-size:19px; margin:0; letter-spacing:-0.01em; }
+  .section-h .note { font-size:12.5px; color:var(--muted); margin-left:auto; }
+  @media (max-width:620px){ .section-h .note { margin-left:0; } .section-h { flex-wrap:wrap; } }
+
+  .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:16px 0 6px; }
+  @media (max-width:760px){ .kpis { grid-template-columns:repeat(2,1fr);} }
+  .tile { background:var(--surface); border:1px solid var(--border); border-radius:14px;
+    padding:16px 16px 14px; box-shadow:var(--shadow); }
+  .tile.hero { border-left:3px solid var(--bad); background:var(--alert-wash); }
+  .tile .label { font-size:12px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.03em; }
+  .tile .value { font-size:29px; font-weight:700; letter-spacing:-0.02em; margin-top:6px; }
+  .tile .delta { font-size:12.5px; margin-top:4px; font-weight:600; }
+  .delta.up { color:var(--good);} .delta.down { color:var(--bad);} .delta .vs { color:var(--muted); font-weight:400; }
+  .tile .hint { font-size:11.5px; color:var(--muted); margin-top:6px; line-height:1.4; }
+
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:16px;
+    padding:18px 18px 14px; box-shadow:var(--shadow); margin:16px 0 18px; }
+  .card h3 { font-size:15px; margin:0 0 2px; letter-spacing:-0.01em; }
+  .card .cap { font-size:12.5px; color:var(--muted); margin:0 0 10px; }
+  .chart { width:100%; height:auto; display:block; overflow:visible; }
+  .chart text { font-family:system-ui,sans-serif; }
+  .legend { display:flex; gap:16px; flex-wrap:wrap; margin-top:12px; }
+  .lg { font-size:12px; color:var(--text-secondary); display:inline-flex; align-items:center; gap:6px; }
+  .lg i { width:10px; height:10px; border-radius:3px; display:inline-block; }
+
+  .analysis { background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--s1);
+    border-radius:12px; padding:13px 16px; margin:0 0 18px; box-shadow:var(--shadow); }
+  .analysis .h { font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); margin-bottom:4px; }
+  .analysis p { margin:0; font-size:14px; color:var(--text-secondary); line-height:1.55; }
+  .analysis b { color:var(--text-primary); font-weight:600; }
+
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media (max-width:860px){ .grid2 { grid-template-columns:1fr;} }
+  .subhead { font-size:12.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); margin:4px 0 8px; }
+  .subhead span { font-weight:400; text-transform:none; letter-spacing:0; }
+
+  .tablewrap { overflow-x:auto; }
+  table { border-collapse:collapse; width:100%; font-size:13px; }
+  th,td { text-align:right; padding:9px 11px; white-space:nowrap; font-variant-numeric:tabular-nums; }
+  th:first-child,td:first-child { text-align:left; }
+  thead th { color:var(--muted); font-weight:600; font-size:11.5px; text-transform:uppercase; letter-spacing:0.03em; border-bottom:1px solid var(--baseline);}
+  tbody tr { border-bottom:1px solid var(--grid);}
+  tbody tr:hover { background:var(--accent-wash);}
+  td.up { color:var(--good); font-weight:600;} td.down { color:var(--bad); font-weight:600;}
+  td.na, tr.soft td { color:var(--muted); font-style:italic; }
+  tr.soft td { text-align:left; font-size:12px; }
+  .tnote { font-size:11.5px; color:var(--muted); padding:10px 2px 0; line-height:1.5; }
+  .pill { font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:5px; color:#fff; }
+  .pill.br { background:var(--brand);} .pill.di { background:var(--disc);}
+
+  ol.checks { padding-left:0; list-style:none; counter-reset:c; margin:14px 0 0; }
+  ol.checks li { counter-increment:c; position:relative; padding:12px 0 12px 40px; border-top:1px solid var(--grid);
+    font-size:14px; color:var(--text-secondary); line-height:1.55; }
+  ol.checks li:first-child { border-top:none; }
+  ol.checks li::before { content:counter(c); position:absolute; left:0; top:12px; width:24px; height:24px;
+    border-radius:7px; background:var(--s1); color:#fff; font-size:12px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; }
+  ol.checks li b { color:var(--text-primary); font-weight:600; }
+  ul.plain { padding-left:18px; margin:10px 0 0; }
+  ul.plain li { font-size:13.5px; color:var(--text-secondary); line-height:1.6; margin-bottom:7px; }
+  ul.plain b { color:var(--text-primary); font-weight:600; }
+  footer { margin-top:44px; padding-top:18px; border-top:1px solid var(--border); color:var(--muted); font-size:12px; line-height:1.6; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <div class="brandrow">
+    <h1>Google Business Profile Review</h1>
+    <span class="badge">Internal</span>
+  </div>
+  <div class="sub">Smith Bros Mobile Detailing &middot; April&ndash;August, 2025 compared with 2026</div>
+  <div class="source">Source: Google Business Profile performance data, pulled 9 September 2026. 2 of 3 profiles. Data lags 2&ndash;3 days.</div>
+</header>
+
+<div class="verdict">
+  <div class="h">The finding</div>
+  <p><b>Google local visibility was cut, on the Carlsbad profile only.</b> Carlsbad calls fell 72%, views fell 55% and search impressions fell 84% year over year. San Marcos grew over the same window.</p>
+  <p>Across both profiles, <b>calls from Google fell 35%</b>, from 417 to 270. That is the phone-side gap. It is not a call-handling problem and it is not explained by the Yelp budget change alone.</p>
+  <p>The pattern points to <b>Carlsbad being filtered out of non-branded results</b>, most likely as a duplicate of San Marcos. Branded searches still work, which is why it went unnoticed.</p>
+</div>
+
+<div class="section-h"><h2>Both profiles combined</h2><span class="note">April&ndash;August, year over year</span></div>
+<div class="kpis">
+<div class="tile hero"><div class="label">Calls</div><div class="value">270</div><div class="delta down">-35.3% <span class="vs">vs 417 in 2025</span></div><div class="hint">Taps on the call button, both profiles.</div></div>
+<div class="tile"><div class="label">Views</div><div class="value">15,475</div><div class="delta down">-29.5% <span class="vs">vs 21,941 in 2025</span></div><div class="hint">Times the profiles were seen on Search or Maps.</div></div>
+<div class="tile"><div class="label">Interactions</div><div class="value">2,104</div><div class="delta down">-12.8% <span class="vs">vs 2,414 in 2025</span></div><div class="hint">Calls, chats, directions and website clicks.</div></div>
+<div class="tile"><div class="label">Website clicks</div><div class="value">1,308</div><div class="delta down">-17.6% <span class="vs">vs 1,587 in 2025</span></div><div class="hint">Clicks through to the site from the profiles.</div></div>
+</div>
+
+<div class="section-h"><h2>Year-over-year change by metric</h2><span class="note">bar direction shows gain or loss</span></div>
+<div class="card">
+  <h3>San Marcos grew while Carlsbad fell on every measure</h3>
+  <p class="cap">Percentage change, April&ndash;August 2025 to April&ndash;August 2026.</p>
+  <svg class="chart" viewBox="0 0 700 270" role="img" aria-label="Year over year percent change by metric for each profile">
+<line x1="219.4" y1="18" x2="219.4" y2="240" stroke="var(--grid)" stroke-width="1"/>
+<text x="219.4" y="262" fill="var(--muted)" font-size="10.5" text-anchor="middle">-75%</text>
+<line x1="305.1" y1="18" x2="305.1" y2="240" stroke="var(--grid)" stroke-width="1"/>
+<text x="305.1" y="262" fill="var(--muted)" font-size="10.5" text-anchor="middle">-50%</text>
+<line x1="390.9" y1="18" x2="390.9" y2="240" stroke="var(--grid)" stroke-width="1"/>
+<text x="390.9" y="262" fill="var(--muted)" font-size="10.5" text-anchor="middle">-25%</text>
+<line x1="562.3" y1="18" x2="562.3" y2="240" stroke="var(--grid)" stroke-width="1"/>
+<text x="562.3" y="262" fill="var(--muted)" font-size="10.5" text-anchor="middle">+25%</text>
+<line x1="476.6" y1="18" x2="476.6" y2="240" stroke="var(--baseline)" stroke-width="1.5"/>
+<text x="476.6" y="262" fill="var(--muted)" font-size="10.5" text-anchor="middle">0</text>
+<text x="156" y="46" fill="var(--text-secondary)" font-size="12.5" text-anchor="end">Interactions</text>
+<rect x="476.6" y="26" width="105.9" height="13" rx="4" fill="var(--sm)"><title>San Marcos Interactions: +30.9%</title></rect>
+<text x="588.5" y="36.5" fill="var(--text-primary)" font-size="11.5" font-weight="600" text-anchor="start">+30.9%</text>
+<rect x="279.1" y="43" width="197.5" height="13" rx="4" fill="var(--cb)"><title>Carlsbad Interactions: -57.6%</title></rect>
+<text x="273.1" y="53.5" fill="var(--text-primary)" font-size="11.5" font-weight="600" text-anchor="end">-57.6%</text>
+<text x="156" y="90" fill="var(--text-secondary)" font-size="12.5" text-anchor="end">Views</text>
+<rect x="476.6" y="70" width="10.6" height="13" rx="4" fill="var(--sm)"><title>San Marcos Views: +3.1%</title></rect>
+<text x="493.2" y="80.5" fill="var(--text-primary)" font-size="11.5" font-weight="600" text-anchor="start">+3.1%</text>
+<rect x="289.0" y="87" width="187.5" height="13" rx="4" fill="var(--cb)"><title>Carlsbad Views: -54.7%</title></rect>
+<text x="283.0" y="97.5" fill="var(--text-primary)" font-size="11.5" font-weight="600" text-anchor="end">-54.7%</text>
+<text x="156" y="134" fill="var(--text-secondary)" font-size="12.5" text-anchor="end">Searches</text>
+<rect x="333.3" y="114" width="143.3" height="13" rx="4" fill="var(--sm)"><title>San Marcos Searches: -41.8%</title></rect>
+<text x="327.3" y="124.5" fill="var(--text-primary)" font-size="11.5" font-weight="600" text-anchor="end">-41.8%</text>
+<rect x="189.3" y="131" width="287.3" height="13" rx="4" fill="var(--cb)"><title>Carlsbad Searches: -83.8%</title></rect>
+<text x="196.3" y="141.5" fill="#ffffff" font-size="11.5" font-weight="600" text-anchor="start">-83.8%</text>
+<text x="156" y="178" fill="var(--text-secondary)" font-size="12.5" text-anchor="end">Calls</text>
+<rect x="476.6" y="158" width="30.9" height="13" rx="4" fill="var(--sm)"><title>San Marcos Calls: +9.0%</title></rect>
+<text x="513.4" y="168.5" fill="var(--text-primary)" font-size="11.5" font-weight="600" text-anchor="start">+9.0%</text>
+<rect x="230.1" y="175" width="246.5" height="13" rx="4" fill="var(--cb)"><title>Carlsbad Calls: -71.9%</title></rect>
+<text x="224.1" y="185.5" fill="var(--text-primary)" font-size="11.5" font-weight="600" text-anchor="end">-71.9%</text>
+<text x="156" y="222" fill="var(--text-secondary)" font-size="12.5" text-anchor="end">Website clicks</text>
+<rect x="476.6" y="202" width="145.0" height="13" rx="4" fill="var(--sm)"><title>San Marcos Website clicks: +42.3%</title></rect>
+<text x="627.6" y="212.5" fill="var(--text-primary)" font-size="11.5" font-weight="600" text-anchor="start">+42.3%</text>
+<rect x="283.2" y="219" width="193.4" height="13" rx="4" fill="var(--cb)"><title>Carlsbad Website clicks: -56.4%</title></rect>
+<text x="277.2" y="229.5" fill="var(--text-primary)" font-size="11.5" font-weight="600" text-anchor="end">-56.4%</text>
+</svg>
+  <div class="legend"><span class="lg"><i style="background:var(--sm)"></i>San Marcos</span><span class="lg"><i style="background:var(--cb)"></i>Carlsbad</span></div>
+</div>
+<div class="analysis"><div class="h">Read</div><p>The two profiles move in opposite directions on all five shared metrics. That is the signature of visibility moving between profiles rather than demand falling. <b>Direction requests are not available for Carlsbad</b> because it has no displayed address, which also makes it more exposed to Google's proximity and duplicate filters.</p></div>
+
+<div class="section-h"><h2>Calls, the metric that matters</h2><span class="note">taps on the call button</span></div>
+<div class="card">
+  <h3>Carlsbad lost 164 calls; San Marcos gained 17</h3>
+  <p class="cap">Calls made from the Business Profile, April&ndash;August. Faded bars are 2025, solid bars are 2026.</p>
+  <svg class="chart" viewBox="0 0 700 250" role="img" aria-label="Calls from Google Business Profile, April to August, 2025 versus 2026">
+<line x1="40" y1="208" x2="680" y2="208" stroke="var(--baseline)" stroke-width="1"/>
+<rect x="68" y="134.2" width="62" height="73.8" rx="4" fill="var(--sm)" fill-opacity="0.42"><title>San Marcos 2025: 189 calls</title></rect>
+<text x="99.0" y="126.2" fill="var(--text-primary)" font-size="14" font-weight="700" text-anchor="middle">189</text>
+<text x="99.0" y="224" fill="var(--muted)" font-size="11" text-anchor="middle">2025</text>
+<rect x="148" y="127.5" width="62" height="80.5" rx="4" fill="var(--sm)" fill-opacity="1"><title>San Marcos 2026: 206 calls</title></rect>
+<text x="179.0" y="119.5" fill="var(--text-primary)" font-size="14" font-weight="700" text-anchor="middle">206</text>
+<text x="179.0" y="224" fill="var(--muted)" font-size="11" text-anchor="middle">2026</text>
+<text x="139.0" y="242" fill="var(--text-primary)" font-size="12.5" font-weight="600" text-anchor="middle">San Marcos</text>
+<text x="139.0" y="258" fill="var(--good)" font-size="12" font-weight="600" text-anchor="middle">+17 (+9%)</text>
+<rect x="268" y="118.9" width="62" height="89.1" rx="4" fill="var(--cb)" fill-opacity="0.42"><title>Carlsbad 2025: 228 calls</title></rect>
+<text x="299.0" y="110.9" fill="var(--text-primary)" font-size="14" font-weight="700" text-anchor="middle">228</text>
+<text x="299.0" y="224" fill="var(--muted)" font-size="11" text-anchor="middle">2025</text>
+<rect x="348" y="183.0" width="62" height="25.0" rx="4" fill="var(--cb)" fill-opacity="1"><title>Carlsbad 2026: 64 calls</title></rect>
+<text x="379.0" y="175.0" fill="var(--text-primary)" font-size="14" font-weight="700" text-anchor="middle">64</text>
+<text x="379.0" y="224" fill="var(--muted)" font-size="11" text-anchor="middle">2026</text>
+<text x="339.0" y="242" fill="var(--text-primary)" font-size="12.5" font-weight="600" text-anchor="middle">Carlsbad</text>
+<text x="339.0" y="258" fill="var(--bad)" font-size="12" font-weight="600" text-anchor="middle">-164 (-72%)</text>
+<rect x="468" y="45.1" width="62" height="162.9" rx="4" fill="var(--total)" fill-opacity="0.42"><title>Combined 2025: 417 calls</title></rect>
+<text x="499.0" y="37.1" fill="var(--text-primary)" font-size="14" font-weight="700" text-anchor="middle">417</text>
+<text x="499.0" y="224" fill="var(--muted)" font-size="11" text-anchor="middle">2025</text>
+<rect x="548" y="102.5" width="62" height="105.5" rx="4" fill="var(--total)" fill-opacity="1"><title>Combined 2026: 270 calls</title></rect>
+<text x="579.0" y="94.5" fill="var(--text-primary)" font-size="14" font-weight="700" text-anchor="middle">270</text>
+<text x="579.0" y="224" fill="var(--muted)" font-size="11" text-anchor="middle">2026</text>
+<text x="539.0" y="242" fill="var(--text-primary)" font-size="12.5" font-weight="600" text-anchor="middle">Combined</text>
+<text x="539.0" y="258" fill="var(--bad)" font-size="12" font-weight="600" text-anchor="middle">-147 (-35%)</text>
+</svg>
+</div>
+<div class="analysis"><div class="h">Read</div><p>Carlsbad was the <b>larger</b> profile in 2025 on both calls and views, so the loss landed on the bigger of the two. A 147-call net decline over five months is enough on its own to explain a 17&ndash;25% fall in new customers, before the Yelp change is even counted.</p></div>
+
+<div class="section-h"><h2>Where people find each profile</h2><span class="note">share of profile views</span></div>
+<div class="card">
+  <h3>Carlsbad has effectively left Google Maps</h3>
+  <p class="cap">Platform and device split of profile views, April&ndash;August 2026.</p>
+  <svg class="chart" viewBox="0 0 700 208" role="img" aria-label="Share of profile views by platform and device">
+<text x="20" y="22" fill="var(--text-primary)" font-size="13" font-weight="600">San Marcos <tspan fill="var(--muted)" font-weight="400">9,874 views</tspan></text>
+<rect x="20.0" y="30" width="241.4" height="30" rx="3" fill="var(--s1)"><title>San Marcos — Google Search, mobile: 3,642 (37%)</title></rect>
+<text x="140.7" y="50" fill="#fff" font-size="12" font-weight="700" text-anchor="middle">37%</text>
+<rect x="263.4" y="30" width="199.1" height="30" rx="3" fill="var(--s2)"><title>San Marcos — Google Search, desktop: 3,009 (30%)</title></rect>
+<text x="363.0" y="50" fill="#fff" font-size="12" font-weight="700" text-anchor="middle">30%</text>
+<rect x="464.6" y="30" width="155.3" height="30" rx="3" fill="var(--s3)"><title>San Marcos — Google Maps, mobile: 2,353 (24%)</title></rect>
+<text x="542.2" y="50" fill="#fff" font-size="12" font-weight="700" text-anchor="middle">24%</text>
+<rect x="621.8" y="30" width="56.2" height="30" rx="3" fill="var(--s4)"><title>San Marcos — Google Maps, desktop: 870 (9%)</title></rect>
+<text x="649.9" y="50" fill="#fff" font-size="12" font-weight="700" text-anchor="middle">9%</text>
+<text x="20" y="80" fill="var(--muted)" font-size="11.5">Maps total 33% &#183; Maps mobile <tspan fill="var(--text-primary)" font-weight="700">2,353 views (24%)</tspan></text>
+<text x="20" y="106" fill="var(--text-primary)" font-size="13" font-weight="600">Carlsbad <tspan fill="var(--muted)" font-weight="400">5,601 views</tspan></text>
+<rect x="20.0" y="114" width="356.1" height="30" rx="3" fill="var(--s1)"><title>Carlsbad — Google Search, mobile: 3,039 (54%)</title></rect>
+<text x="198.1" y="134" fill="#fff" font-size="12" font-weight="700" text-anchor="middle">54%</text>
+<rect x="378.1" y="114" width="232.1" height="30" rx="3" fill="var(--s2)"><title>Carlsbad — Google Search, desktop: 1,987 (35%)</title></rect>
+<text x="494.2" y="134" fill="#fff" font-size="12" font-weight="700" text-anchor="middle">35%</text>
+<rect x="612.2" y="114" width="9.9" height="30" rx="3" fill="var(--s3)"><title>Carlsbad — Google Maps, mobile: 101 (2%)</title></rect>
+<rect x="624.1" y="114" width="53.9" height="30" rx="3" fill="var(--s4)"><title>Carlsbad — Google Maps, desktop: 474 (8%)</title></rect>
+<text x="651.1" y="134" fill="#fff" font-size="12" font-weight="700" text-anchor="middle">8%</text>
+<text x="20" y="164" fill="var(--muted)" font-size="11.5">Maps total 10% &#183; Maps mobile <tspan fill="var(--text-primary)" font-weight="700">101 views (2%)</tspan></text>
+</svg>
+  <div class="legend"><span class="lg"><i style="background:var(--s1)"></i>Google Search, mobile</span><span class="lg"><i style="background:var(--s2)"></i>Google Search, desktop</span><span class="lg"><i style="background:var(--s3)"></i>Google Maps, mobile</span><span class="lg"><i style="background:var(--s4)"></i>Google Maps, desktop</span></div>
+</div>
+<div class="analysis"><div class="h">Read</div><p>Carlsbad drew <b>101 Maps mobile views in five months</b>, 2% of its total, against 24% for San Marcos. Maps mobile is where local purchase intent concentrates. A profile that ranks normally does not show this shape.</p></div>
+
+<div class="section-h"><h2>What people searched to find them</h2><span class="note">top 5 terms per profile</span></div>
+<div class="card">
+  <h3>Carlsbad only surfaces for people who already know the name</h3>
+  <p class="cap">Branded terms name the business. Discovery terms describe the service or the city.</p>
+  <svg class="chart" viewBox="0 0 700 150" role="img" aria-label="Branded versus discovery share of top five search terms">
+<text x="20" y="22" fill="var(--text-primary)" font-size="13" font-weight="600">San Marcos <tspan fill="var(--muted)" font-weight="400">1,051 impressions in top 5 terms</tspan></text>
+<rect x="20.0" y="30" width="254.2" height="28" rx="3" fill="var(--brand)"><title>San Marcos — Branded: 408 (39%)</title></rect>
+<text x="147.1" y="49" fill="#fff" font-size="12" font-weight="700" text-anchor="middle">Branded 39%</text>
+<rect x="276.2" y="30" width="401.8" height="28" rx="3" fill="var(--disc)"><title>San Marcos — Discovery: 643 (61%)</title></rect>
+<text x="477.1" y="49" fill="#fff" font-size="12" font-weight="700" text-anchor="middle">Discovery 61%</text>
+<text x="20" y="84" fill="var(--text-primary)" font-size="13" font-weight="600">Carlsbad <tspan fill="var(--muted)" font-weight="400">497 impressions in top 5 terms</tspan></text>
+<rect x="20.0" y="92" width="551.8" height="28" rx="3" fill="var(--brand)"><title>Carlsbad — Branded: 417 (84%)</title></rect>
+<text x="295.9" y="111" fill="#fff" font-size="12" font-weight="700" text-anchor="middle">Branded 84%</text>
+<rect x="573.8" y="92" width="104.2" height="28" rx="3" fill="var(--disc)"><title>Carlsbad — Discovery: 80 (16%)</title></rect>
+<text x="625.9" y="111" fill="#fff" font-size="12" font-weight="700" text-anchor="middle">Discovery 16%</text>
+</svg>
+  <div class="legend"><span class="lg"><i style="background:var(--brand)"></i>Branded</span><span class="lg"><i style="background:var(--disc)"></i>Discovery</span></div>
+</div>
+<div class="grid2">
+<div><div class="subhead">San Marcos <span>— top 5 search terms</span></div><div class="tablewrap"><table><thead><tr><th>Term</th><th>Type</th><th>Impressions</th></tr></thead><tbody>
+<tr><td>car wash</td><td><span class="pill di">Discovery</span></td><td>394</td></tr>
+<tr><td>smith bros mobile detailing</td><td><span class="pill br">Branded</span></td><td>337</td></tr>
+<tr><td>car detailing near me</td><td><span class="pill di">Discovery</span></td><td>137</td></tr>
+<tr><td>car wash near me</td><td><span class="pill di">Discovery</span></td><td>112</td></tr>
+<tr><td>smith bros detailing</td><td><span class="pill br">Branded</span></td><td>71</td></tr>
+</tbody></table></div></div>
+<div><div class="subhead">Carlsbad <span>— top 5 search terms</span></div><div class="tablewrap"><table><thead><tr><th>Term</th><th>Type</th><th>Impressions</th></tr></thead><tbody>
+<tr><td>smith bros mobile detailing</td><td><span class="pill br">Branded</span></td><td>305</td></tr>
+<tr><td>smith bros detailing</td><td><span class="pill br">Branded</span></td><td>72</td></tr>
+<tr><td>car detailing near me</td><td><span class="pill di">Discovery</span></td><td>58</td></tr>
+<tr><td>smith brothers mobile detailing</td><td><span class="pill br">Branded</span></td><td>40</td></tr>
+<tr><td>car detailing carlsbad</td><td><span class="pill di">Discovery</span></td><td>22</td></tr>
+</tbody></table></div></div>
+</div>
+<div class="analysis"><div class="h">Read</div><p>Carlsbad's top five terms are <b>84% branded</b> against 39% for San Marcos, and its search impressions fell 84% year over year. Branded visibility intact, discovery visibility gone, is the specific signature of Google's non-branded visibility filter. It also explains why nobody caught this: searching the business name still returns the profile normally.</p></div>
+
+<div class="section-h"><h2>Likely cause</h2></div>
+<div class="card">
+  <h3>Carlsbad is being filtered as a duplicate of San Marcos</h3>
+  <p class="cap">Two aggravating factors, both visible in public directory listings.</p>
+  <ul class="plain">
+    <li><b>Shared address and phone.</b> Public listings for the Carlsbad-named entity carry 1335 Descanso Ave, San Marcos and (760) 310-1532, the San Marcos location's details. Two profiles for one brand sharing an address and a phone number is the standard trigger for duplicate filtering.</li>
+    <li><b>Business name outside guidelines.</b> The profile name is "Smith Bros Mobile Detailing, Ceramic, Tint, &amp; PPF". Google requires the real-world name only; appended service keywords can suppress a profile on their own.</li>
+    <li><b>The mirror image.</b> San Marcos rose 31% across the identical window in which Carlsbad fell 58%. That reads as one profile absorbing the other's visibility rather than as a market-wide change.</li>
+  </ul>
+</div>
+
+<div class="section-h"><h2>Checks to confirm</h2><span class="note">in order</span></div>
+<div class="card">
+  <ol class="checks">
+    <li>Incognito, location set to Carlsbad, search <b>"car detailing carlsbad"</b> and <b>"mobile detailing near me"</b>. Does the Carlsbad profile appear in the map pack at all, or only San Marcos?</li>
+    <li>Check the Carlsbad profile for a <b>suspension notice, a pending edit, or a Google-applied name change</b>.</li>
+    <li>Compare <b>address, phone and primary category</b> across all three profiles. An identical phone or address on two of them confirms the trigger.</li>
+    <li>Pull Carlsbad <b>month by month</b>. The period picker accepts a single month and returns the same month last year, so five selections date the drop and settle whether April is when it happened.</li>
+    <li>Pull <b>profile 3</b> on the same basis. It is not in any number on this page.</li>
+    <li>Pull <b>Fieldd new customers by source</b>, monthly, April&ndash;August both years, to apportion the decline between the Google loss and the Yelp budget change.</li>
+  </ol>
+</div>
+
+<div class="section-h"><h2>Full data</h2><span class="note">April&ndash;August, both years</span></div>
+<div class="card">
+  <div class="tablewrap"><table><thead><tr><th>Metric</th><th>SM 2025</th><th>SM 2026</th><th>SM YoY</th><th>CB 2025</th><th>CB 2026</th><th>CB YoY</th><th>All 2025</th><th>All 2026</th><th>All YoY</th></tr></thead><tbody>
+<tr><td>Interactions</td><td>1,221</td><td>1,598</td><td class="up">+30.9%</td><td>1,193</td><td>506</td><td class="down">-57.6%</td><td>2,414</td><td><b>2,104</b></td><td class="down"><b>-12.8%</b></td></tr>
+<tr><td>Views</td><td>9,577</td><td>9,874</td><td class="up">+3.1%</td><td>12,364</td><td>5,601</td><td class="down">-54.7%</td><td>21,941</td><td><b>15,475</b></td><td class="down"><b>-29.5%</b></td></tr>
+<tr><td>Searches</td><td>2,393</td><td>1,393</td><td class="down">-41.8%</td><td>3,167</td><td>513</td><td class="down">-83.8%</td><td>5,560</td><td><b>1,906</b></td><td class="down"><b>-65.7%</b></td></tr>
+<tr><td>Calls</td><td>189</td><td>206</td><td class="up">+9.0%</td><td>228</td><td>64</td><td class="down">-71.9%</td><td>417</td><td><b>270</b></td><td class="down"><b>-35.3%</b></td></tr>
+<tr><td>Direction requests</td><td>408</td><td>483</td><td class="up">+18.4%</td><td class="na">n/a</td><td class="na">n/a</td><td class="na">no address</td><td>408</td><td>483</td><td class="up">+18.4%</td></tr>
+<tr><td>Website clicks</td><td>624</td><td>888</td><td class="up">+42.3%</td><td>963</td><td>420</td><td class="down">-56.4%</td><td>1,587</td><td><b>1,308</b></td><td class="down"><b>-17.6%</b></td></tr>
+<tr class="soft"><td>Chat clicks</td><td colspan="9">SM / CB — 0 / 2 in 2025, 21 / 22 in 2026</td></tr>
+<tr class="soft"><td>Bookings</td><td colspan="9">SM / CB — 0 / 0 in 2025, 0 / 0 in 2026</td></tr>
+</tbody></table></div>
+<p class="tnote">SM = San Marcos, CB = Carlsbad. 2025 columns are derived from the year-over-year percentages the Google interface prints on each card, because the interface will not display a range older than six months. The derivation self-validates: in both years and on both profiles the component metrics sum exactly to the interactions total.</p>
+</div>
+
+<div class="section-h"><h2>Method and limits</h2></div>
+<div class="card">
+  <ul class="plain">
+    <li><b>Why 2025 is derived.</b> The Google interface will not display a date range older than six months, so April&ndash;August 2025 cannot be viewed directly. Every card does print its own year-over-year percentage, and the 2025 figures here are back-calculated from those. The result self-validates: on both profiles and in both years the component metrics sum exactly to the interactions total.</li>
+    <li><b>Calls undercount.</b> Google counts taps on the call button. It does not count anyone who read the number and dialled it, and Google removed call history in July 2024, so there is no answered, missed or converted data available in the platform at all.</li>
+    <li><b>Three metrics no longer exist.</b> The branded and discovery split was deleted by Google in February 2023; the search-terms table above is the closest available proxy. Standalone profile views were replaced by the views and surface breakdown. Messaging was shut down on 31 July 2024, so any year-over-year comparison there measures Google's shutdown rather than marketing performance.</li>
+    <li><b>Bookings are zero</b> on both profiles in both years. Reserve with Google is not configured.</li>
+    <li><b>Search impressions.</b> The searches metric is built from search terms that Google filters for low volume before reporting. On San Marcos, where views are flat and every action rose, its 42% fall is most likely a counting artefact. On Carlsbad it is corroborated by views, calls and clicks all falling together, so there it is real.</li>
+  </ul>
+</div>
+
+<footer>
+  Prepared 9 September 2026 &middot; Outrider Digital &middot; Internal working document, 2 of 3 profiles.<br>
+  Figures for April&ndash;August 2026 are as reported by Google Business Profile. Figures for April&ndash;August 2025 are derived from the year-over-year percentages Google reports against those same periods.
+</footer>
+
+</div>
+</body>
+</html>
